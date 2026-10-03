@@ -2,8 +2,7 @@ import { useLocation, useNavigate } from "react-router";
 
 /**
  * Leaves the New application page: back to the previous page in Cloud Inventory, or to
- * `/applications` when the page was opened directly. The header's back chevron and the page's
- * Cancel button do the same thing, so both call this.
+ * `/applications` when the page was opened directly.
  */
 export function useLeaveNewApplication() {
   const navigate = useNavigate();

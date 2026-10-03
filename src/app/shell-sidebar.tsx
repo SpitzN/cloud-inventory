@@ -35,6 +35,8 @@ export function ShellSidebar() {
 
 /** A section's link, active on the section's address and every address below it. */
 function SectionItem({ to, label, icon }: { to: string; label: string; icon: ReactElement }) {
+  // Not NavLink: it reports "active" only to its own className and children functions, and
+  // SidebarMenuButton needs it as the `isActive` prop.
   const isActive = useMatch(`${to}/*`) !== null;
 
   return (

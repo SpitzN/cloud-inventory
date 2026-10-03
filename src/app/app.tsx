@@ -13,6 +13,9 @@ const router = createBrowserRouter([
   { path: "/", element: <Navigate to="/resources" replace /> },
   {
     element: <Shell />,
+    // An error in the shell itself, such as a route header that does not parse, takes the shell
+    // with it; the error screen is shown on its own.
+    errorElement: <ErrorScreen />,
     children: [
       {
         // Pathless, so an error replaces only the page content and the shell stays.
