@@ -36,8 +36,10 @@ export function ApplicationDrawer() {
   const remove = useApplicationsStore((state) => state.remove);
   const isMissing = application === undefined;
   const isDeleting = useRef(false);
-  // The Member under the pointer or keyboard focus, in either the graph or the table.
-  const [highlightedResourceId, setHighlightedResourceId] = useState<string>();
+  // Kept apart so that the pointer leaving a row or node falls back to the focused row, which
+  // counts as hovered.
+  const [hoveredResourceId, setHoveredResourceId] = useState<string>();
+  const [focusedResourceId, setFocusedResourceId] = useState<string>();
 
   // Opened from a card, the previous entry is the Applications page: going back to it keeps Back
   // from reopening the drawer.
@@ -69,6 +71,7 @@ export function ApplicationDrawer() {
 
   const { name, description, resourceIds } = application;
   // Members are filtered to known Resources when the Applications are loaded.
+  const highlightedResourceId = hoveredResourceId ?? focusedResourceId;
   const members = resourceIds
     .flatMap((resourceId) => resourceById(resourceId) ?? [])
     .toSorted(compareResourcesInDefaultOrder);
@@ -111,7 +114,7 @@ export function ApplicationDrawer() {
               name={name}
               resources={members}
               highlightedResourceId={highlightedResourceId}
-              onResourceHover={setHighlightedResourceId}
+              onResourceHover={setHoveredResourceId}
             />
           </div>
           <section className="flex flex-col gap-2" aria-labelledby="member-resources">
@@ -121,7 +124,8 @@ export function ApplicationDrawer() {
             <MemberTable
               resources={members}
               highlightedResourceId={highlightedResourceId}
-              onResourceHover={setHighlightedResourceId}
+              onResourceHover={setHoveredResourceId}
+              onResourceFocus={setFocusedResourceId}
             />
           </section>
           <DeleteApplication

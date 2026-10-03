@@ -12,18 +12,20 @@ import type { Resource } from "@/domain/resource";
 
 /**
  * An Application's Members as a table, in the order given. The row whose id is
- * `highlightedResourceId` is shown highlighted. Each row can take keyboard focus, and
- * `onResourceHover` is called with a row's Resource id when the pointer enters it or it takes
- * focus, and with `undefined` when the pointer leaves or focus moves away.
+ * `highlightedResourceId` is shown highlighted. Each row can take keyboard focus.
+ * `onResourceHover` is called with a row's Resource id when the pointer enters it and with
+ * `undefined` when it leaves; `onResourceFocus` likewise when a row takes and loses focus.
  */
 export function MemberTable({
   resources,
   highlightedResourceId,
   onResourceHover,
+  onResourceFocus,
 }: {
   resources: readonly Resource[];
   highlightedResourceId: string | undefined;
   onResourceHover: (resourceId: string | undefined) => void;
+  onResourceFocus: (resourceId: string | undefined) => void;
 }) {
   return (
     <Table>
@@ -55,10 +57,10 @@ export function MemberTable({
                 onResourceHover(undefined);
               }}
               onFocus={() => {
-                onResourceHover(id);
+                onResourceFocus(id);
               }}
               onBlur={() => {
-                onResourceHover(undefined);
+                onResourceFocus(undefined);
               }}
             >
               <TableCell>
