@@ -10,8 +10,23 @@ import {
 import { criticalityTone } from "@/domain/criticality";
 import type { Resource } from "@/domain/resource";
 
-/** An Application's Members as a table, in the order given. */
-export function MemberTable({ resources }: { resources: readonly Resource[] }) {
+/**
+ * An Application's Members as a table, in the order given. The row whose id is
+ * `highlightedResourceId` is shown highlighted. Each row can take keyboard focus.
+ * `onResourceHover` is called with a row's Resource id when the pointer enters it and with
+ * `undefined` when it leaves; `onResourceFocus` likewise when a row takes and loses focus.
+ */
+export function MemberTable({
+  resources,
+  highlightedResourceId,
+  onResourceHover,
+  onResourceFocus,
+}: {
+  resources: readonly Resource[];
+  highlightedResourceId: string | undefined;
+  onResourceHover: (resourceId: string | undefined) => void;
+  onResourceFocus: (resourceId: string | undefined) => void;
+}) {
   return (
     <Table>
       <TableHeader>
@@ -31,7 +46,23 @@ export function MemberTable({ resources }: { resources: readonly Resource[] }) {
           </TableRow>
         ) : (
           resources.map(({ id, name, type, criticality, openIssues }) => (
-            <TableRow key={id}>
+            <TableRow
+              key={id}
+              highlighted={id === highlightedResourceId}
+              tabIndex={0}
+              onMouseEnter={() => {
+                onResourceHover(id);
+              }}
+              onMouseLeave={() => {
+                onResourceHover(undefined);
+              }}
+              onFocus={() => {
+                onResourceFocus(id);
+              }}
+              onBlur={() => {
+                onResourceFocus(undefined);
+              }}
+            >
               <TableCell>
                 <span className="block max-w-48 truncate" title={name}>
                   {name}
