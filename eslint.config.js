@@ -54,8 +54,15 @@ const noApplications = {
 };
 
 export default defineConfig(
-  // .scratch holds local notes and a reference copy with its own tsconfig; it is not part of this project.
-  globalIgnores(["dist", "coverage", ".scratch", "src/components/ui/**"]),
+  // .scratch holds local notes and a reference copy with its own tsconfig, and .claude/worktrees
+  // holds checkouts of this repository made by agents; neither is part of this project.
+  globalIgnores([
+    "dist",
+    "coverage",
+    ".scratch",
+    ".claude/worktrees",
+    "src/components/ui/**",
+  ]),
 
   // eslint-disable comments are inert and reported; with --max-warnings 0 they fail the run.
   {
