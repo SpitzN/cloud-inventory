@@ -1,11 +1,11 @@
 import { ChevronLeftIcon } from "lucide-react";
 import { useMatches } from "react-router";
-import { IconControl } from "@/app/icon-control";
-import { routeHeader } from "@/app/route-header";
-import { ThemeSwitch } from "@/app/theme-switch";
+import { IconControl } from "@/app/shell/icon-control";
+import { routeHeader } from "@/app/shell/route-header";
+import { ThemeSwitch } from "@/app/shell/theme-switch";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { useLeaveNewApplication } from "@/features/applications/use-leave-new-application";
+import { useLeaveNewApplication } from "@/features/applications/hooks/use-leave-new-application";
 
 /** The page's title bar, and the document title, from the header the matched route declares. */
 export function ShellHeader() {

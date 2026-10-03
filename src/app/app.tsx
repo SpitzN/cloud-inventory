@@ -1,13 +1,13 @@
 import { ThemeProvider } from "next-themes";
 import { createBrowserRouter, Navigate, RouterProvider } from "react-router";
-import { ErrorScreen } from "@/app/error-screen";
-import { NotFoundPage } from "@/app/not-found-page";
-import type { RouteHeaderDeclaration } from "@/app/route-header";
-import { Shell } from "@/app/shell";
-import { ApplicationDrawer } from "@/features/applications/application-drawer";
-import { ApplicationsPage } from "@/features/applications/applications-page";
-import { NewApplicationPage } from "@/features/applications/new-application-page";
-import { ResourcesPage } from "@/features/resources/resources-page";
+import { ApplicationsPage } from "@/app/routes/applications";
+import { NewApplicationPage } from "@/app/routes/new-application";
+import { NotFoundPage } from "@/app/routes/not-found";
+import { ResourcesPage } from "@/app/routes/resources";
+import { ErrorScreen } from "@/app/shell/error-screen";
+import type { RouteHeaderDeclaration } from "@/app/shell/route-header";
+import { Shell } from "@/app/shell/shell";
+import { ApplicationDrawer } from "@/features/applications/components/application-drawer";
 
 const router = createBrowserRouter([
   { path: "/", element: <Navigate to="/resources" replace /> },

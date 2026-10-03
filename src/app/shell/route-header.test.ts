@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { routeHeader } from "@/app/route-header";
+import { routeHeader } from "@/app/shell/route-header";
 
 describe("routeHeader", () => {
   it("reads the header the deepest route declares", () => {
