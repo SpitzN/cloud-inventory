@@ -222,7 +222,18 @@ export default defineConfig(
       },
     },
     rules: {
-      "shadcn/no-restyle": ["error", { allow: ["layout"] }],
+      "shadcn/no-restyle": [
+        "error",
+        {
+          allow: ["layout"],
+          // The owner's two exceptions: a table cell truncates and aligns its figures, and a
+          // badge takes its colour from a theme token (the Criticality badge).
+          contracts: [
+            { pattern: "^Table(Cell|Head)$", allow: ["layout", "typography"] },
+            { pattern: "^Badge$", allow: ["layout", "color"] },
+          ],
+        },
+      ],
       // no-restyle judges only the classes it can read; this reports the ones it cannot.
       "shadcn/require-static-classes": "error",
     },
