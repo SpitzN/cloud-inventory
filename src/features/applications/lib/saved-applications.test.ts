@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { exampleApplication } from "@/domain/example-application";
+import { exampleApplication } from "@/domain/dataset";
 import { startingApplications } from "@/features/applications/lib/saved-applications";
 
 const payments = {

@@ -1,3 +1,4 @@
+import type { Application } from "@/domain/application";
 import type { Resource } from "@/domain/resource";
 
 export const resources: readonly Resource[] = [
@@ -152,3 +153,14 @@ const RESOURCES_BY_ID = new Map(resources.map((resource) => [resource.id, resour
 export function resourceById(id: string) {
   return RESOURCES_BY_ID.get(id);
 }
+
+/**
+ * The Application a first run starts with. Its id is fixed, so its address is the same on every
+ * first run.
+ */
+export const exampleApplication: Application = {
+  id: "data-platform",
+  name: "Data Platform",
+  description: "Analytics warehouse, pipelines and notebooks",
+  resourceIds: ["r-006", "r-007", "r-008", "r-009", "r-005"],
+};

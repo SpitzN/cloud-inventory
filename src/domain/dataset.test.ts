@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ApplicationSchema } from "@/domain/application";
-import { resourceById, resources } from "@/domain/dataset";
-import { exampleApplication } from "@/domain/example-application";
+import { exampleApplication, resourceById, resources } from "@/domain/dataset";
 import { ResourceSchema } from "@/domain/resource";
 
 describe("the dataset", () => {

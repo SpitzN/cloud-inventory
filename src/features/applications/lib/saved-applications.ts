@@ -1,6 +1,5 @@
 import type { Application } from "@/domain/application";
-import { resourceById } from "@/domain/dataset";
-import { exampleApplication } from "@/domain/example-application";
+import { exampleApplication, resourceById } from "@/domain/dataset";
 import { SavedApplicationsSchema } from "@/features/applications/schemas/saved-applications";
 
 /**
