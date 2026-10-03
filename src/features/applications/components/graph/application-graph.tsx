@@ -29,7 +29,7 @@ const MIN_ZOOM = 0.25;
 /**
  * An Application as a hub-and-spoke graph: its name at the centre and one node per Resource on a
  * ring, in the order given, starting at the top. Fills its parent, which needs a height. Read-only:
- * the view pans, zooms and fits, and fits again when the set of Resources changes.
+ * the view pans, zooms and fits, and fits again when the Resources change.
  */
 export function ApplicationGraph({
   name,
@@ -79,15 +79,15 @@ export function ApplicationGraph({
       nodesFocusable={false}
       edgesFocusable={false}
       minZoom={MIN_ZOOM}
-      fitView
     >
       <Controls showInteractive={false} />
+      {/* Joined into a string so the effect compares the ids by value, not the array by identity. */}
       <FitViewOnChange nodeIds={resources.map((resource) => resource.id).join(",")} />
     </ReactFlow>
   );
 }
 
-/** Fits the view again whenever `nodeIds` changes; React Flow's `fitView` prop fits only once. */
+/** Fits the view on mount and whenever `nodeIds` changes; React Flow's `fitView` prop fits only once. */
 function FitViewOnChange({ nodeIds }: { nodeIds: string }) {
   const { fitView } = useReactFlow();
 

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate, useParams } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 import {
   Sheet,
   SheetContent,
@@ -22,6 +22,8 @@ import { useApplicationsStore } from "@/features/applications/stores/application
 export function ApplicationDrawer() {
   const { id } = useParams();
   const navigate = useNavigate();
+  // React Router keys the first location of a visit "default", including when Back returns to it.
+  const openedDirectly = useLocation().key === "default";
   const application = useApplicationsStore((state) =>
     state.applications.find((candidate) => candidate.id === id),
   );
@@ -41,7 +43,7 @@ export function ApplicationDrawer() {
     void leave();
   }, [isMissing, navigate]);
 
-  if (application === undefined) {
+  if (isMissing) {
     return null;
   }
 
@@ -55,9 +57,16 @@ export function ApplicationDrawer() {
     <Sheet
       open
       onOpenChange={(open) => {
-        if (!open) {
-          void navigate("/applications");
+        if (open) {
+          return;
         }
+        // Opened from a card, the previous entry is the Applications page: going back to it keeps
+        // Back from reopening the drawer.
+        if (openedDirectly) {
+          void navigate("/applications", { replace: true });
+          return;
+        }
+        void navigate(-1);
       }}
     >
       <SheetContent className="data-[side=right]:w-11/20 data-[side=right]:min-w-140 data-[side=right]:sm:max-w-none">
