@@ -8,7 +8,11 @@ Types are inferred from Zod schemas. The schemas follow the first `Resource` and
 
 ```ts
 export const ProviderSchema = z.enum(["AWS", "GCP", "Azure"]);
-export const EnvironmentSchema = z.enum(["production", "staging", "development"]);
+export const EnvironmentSchema = z.enum([
+  "production",
+  "staging",
+  "development",
+]);
 export const CriticalitySchema = z.enum(["low", "medium", "high", "critical"]);
 
 export const ResourceSchema = z.object({
@@ -49,40 +53,42 @@ Rules that follow from the model:
 
 ## Stack
 
-| Concern             | Choice                                                     | Decision record                                             |
-| ------------------- | ---------------------------------------------------------- | ----------------------------------------------------------- |
-| Build and framework | Vite, React 19 with the React Compiler, TypeScript 6 in strict mode |                                                    |
-| Checks              | ESLint, Prettier, husky pre-commit hook; see [tooling.md](./tooling.md) |                                                |
-| Routing             | React Router                                               |                                                             |
-| Client state        | Zustand, with its persist middleware for Applications      | [0001](./adr/0001-no-simulated-backend.md)                  |
-| Table               | TanStack Table v9, rendered with shadcn/ui table markup    | [0003](./adr/0003-tanstack-table-for-the-resources-table.md) |
-| Form                | React Hook Form with the Zod resolver                      | [0004](./adr/0004-react-hook-form-with-zod.md)              |
-| Schemas and types   | Zod 4; all domain types are schema-derived                 | [0004](./adr/0004-react-hook-form-with-zod.md), [0008](./adr/0008-open-issues-is-part-of-resource.md) |
-| Styling             | Tailwind CSS                                               |                                                             |
-| Components          | shadcn/ui, Base UI variants only                           | [0007](./adr/0007-shadcn-ui-on-base-ui-only.md)             |
-| Graph               | React Flow (`@xyflow/react`)                               | [0002](./adr/0002-react-flow-for-the-graph.md)              |
-| Toasts              | shadcn/ui's Sonner component                               |                                                             |
-| Theme               | `next-themes`                                              |                                                             |
-| Tests               | Vitest                                                     |                                                             |
-| Package manager     | pnpm                                                       |                                                             |
+| Concern             | Choice                                                                                                             | Decision record                                                                                       |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| Build and framework | Vite, React 19 with the React Compiler, TypeScript 6 in strict mode                                                |                                                                                                       |
+| Checks              | ESLint, Prettier, husky pre-commit hook; see [tooling.md](./tooling.md)                                            |                                                                                                       |
+| Routing             | React Router                                                                                                       |                                                                                                       |
+| Client state        | Zustand, with its persist middleware for Applications                                                              | [0001](./adr/0001-no-simulated-backend.md)                                                            |
+| Table               | TanStack Table v9, rendered with shadcn/ui table markup                                                            | [0003](./adr/0003-tanstack-table-for-the-resources-table.md)                                          |
+| Form                | React Hook Form with the Zod resolver                                                                              | [0004](./adr/0004-react-hook-form-with-zod.md)                                                        |
+| Schemas and types   | Zod 4; all domain types are schema-derived                                                                         | [0004](./adr/0004-react-hook-form-with-zod.md), [0008](./adr/0008-open-issues-is-part-of-resource.md) |
+| Styling             | Tailwind CSS                                                                                                       |                                                                                                       |
+| Components          | shadcn/ui, Base UI variants only                                                                                   | [0007](./adr/0007-shadcn-ui-on-base-ui-only.md)                                                       |
+| Icons               | lucide-react, shadcn/ui's default                                                                                  |                                                                                                       |
+| Font                | Geist, self-hosted through `@fontsource-variable/geist`, shadcn/ui's default; the visual design pass may change it |                                                                                                       |
+| Graph               | React Flow (`@xyflow/react`)                                                                                       | [0002](./adr/0002-react-flow-for-the-graph.md)                                                        |
+| Toasts              | shadcn/ui's Sonner component                                                                                       |                                                                                                       |
+| Theme               | `next-themes`                                                                                                      |                                                                                                       |
+| Tests               | Vitest                                                                                                             |                                                                                                       |
+| Package manager     | pnpm                                                                                                               |                                                                                                       |
 
-`next-themes` has no Next.js dependency. It is used because shadcn/ui's generated toast component imports its theme hook from it, and because it already follows the system setting on the first visit and remembers the user's choice afterwards.
+`next-themes` has no Next.js dependency. It is used because shadcn/ui's generated toast component imports its theme hook from it, and because it already follows the system setting on the first visit and remembers the user's choice afterwards. shadcn/ui's Vite template also generates a `theme-provider.tsx` of its own; it is not used.
 
 ## Where state lives
 
 There is no backend and no simulated one ([ADR 0001](./adr/0001-no-simulated-backend.md)). The third column says who would own each piece of state in the real product.
 
-| State                                                                 | Home                                                     | In the real product | Reason                                                  |
-| --------------------------------------------------------------------- | -------------------------------------------------------- | ------------------- | ------------------------------------------------------- |
-| Resources                                                             | A static, typed module                                   | Server-owned        | Read-only data; never copied into state                 |
-| Applications                                                          | Zustand store, saved to localStorage, Zod-parsed on load | Server-owned        | Used on several pages, and durable                      |
-| Selection                                                             | A second Zustand store, in memory only                   | Client-owned        | Must outlive the Resources page; the form starts from it |
-| Search, filters, sort                                                 | The address query string, Zod-parsed                     | Client-owned        | Survives a reload; shareable                            |
-| Form draft                                                            | React Hook Form, seeded from the Selection               | Client-owned        | Transient                                               |
-| Open drawer                                                           | The route                                                | Client-owned        | Linkable; Back closes it                                |
-| Theme                                                                 | `next-themes`, in localStorage                           | Client-owned        | Personal preference                                     |
-| Sidebar folded or not                                                 | localStorage                                             | Client-owned        | Personal preference                                     |
-| Filtered rows, counts, an Application's Members, graph nodes and edges | Computed on every render                                 | Derived             | Derived data is never stored                            |
+| State                                                                  | Home                                                     | In the real product | Reason                                                   |
+| ---------------------------------------------------------------------- | -------------------------------------------------------- | ------------------- | -------------------------------------------------------- |
+| Resources                                                              | A static, typed module                                   | Server-owned        | Read-only data; never copied into state                  |
+| Applications                                                           | Zustand store, saved to localStorage, Zod-parsed on load | Server-owned        | Used on several pages, and durable                       |
+| Selection                                                              | A second Zustand store, in memory only                   | Client-owned        | Must outlive the Resources page; the form starts from it |
+| Search, filters, sort                                                  | The address query string, Zod-parsed                     | Client-owned        | Survives a reload; shareable                             |
+| Form draft                                                             | React Hook Form, seeded from the Selection               | Client-owned        | Transient                                                |
+| Open drawer                                                            | The route                                                | Client-owned        | Linkable; Back closes it                                 |
+| Theme                                                                  | `next-themes`, in localStorage                           | Client-owned        | Personal preference                                      |
+| Sidebar folded or not                                                  | localStorage                                             | Client-owned        | Personal preference                                      |
+| Filtered rows, counts, an Application's Members, graph nodes and edges | Computed on every render                                 | Derived             | Derived data is never stored                             |
 
 ### The table owns no state
 
@@ -167,13 +173,13 @@ Three of these are deliberately ignorant of their surroundings:
 
 Zod parses at every point where data enters from outside the type system. Inside, the types are trusted and nothing is re-parsed.
 
-| Boundary               | What is parsed                                                                   |
-| ---------------------- | -------------------------------------------------------------------------------- |
-| localStorage           | The saved Applications list, on load                                             |
-| Address                | `q`, the three filters, `sort`                                                   |
-| Route metadata         | Each route's header title and back-chevron flag                                  |
-| Form                   | The creation form, through React Hook Form's Zod resolver                        |
-| TanStack filter values | The value handed to a custom filter function, which the library types loosely    |
+| Boundary               | What is parsed                                                                |
+| ---------------------- | ----------------------------------------------------------------------------- |
+| localStorage           | The saved Applications list, on load                                          |
+| Address                | `q`, the three filters, `sort`                                                |
+| Route metadata         | Each route's header title and back-chevron flag                               |
+| Form                   | The creation form, through React Hook Form's Zod resolver                     |
+| TanStack filter values | The value handed to a custom filter function, which the library types loosely |
 
 The form schema is built by a function that takes the existing Application names, so the uniqueness rule lives in the schema.
 
@@ -206,13 +212,13 @@ The static dataset is typed by annotation, not parsed at runtime. One test runs 
 
 Tests are deliberately light. They cover pure code only.
 
-| Target                                              | What is checked                                                                                             |
-| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Criticality comparator and the multi-value filter   | Rank order; an empty filter matches everything; several values widen                                        |
-| Address codec                                       | Round trip of valid state; defaults omitted; malformed and unknown values dropped                           |
-| Form schema                                         | Required name, length limits, case-insensitive uniqueness, at least one Member, empty description left out  |
-| Dataset                                             | Every row passes `ResourceSchema`; ids are unique; the example Application's Members all exist              |
-| Saved-data resolution                               | First run; unreadable data; an empty saved list; a deleted example stays deleted; a Member whose Resource is missing |
+| Target                                            | What is checked                                                                                                      |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Criticality comparator and the multi-value filter | Rank order; an empty filter matches everything; several values widen                                                 |
+| Address codec                                     | Round trip of valid state; defaults omitted; malformed and unknown values dropped                                    |
+| Form schema                                       | Required name, length limits, case-insensitive uniqueness, at least one Member, empty description left out           |
+| Dataset                                           | Every row passes `ResourceSchema`; ids are unique; the example Application's Members all exist                       |
+| Saved-data resolution                             | First run; unreadable data; an empty saved list; a deleted example stays deleted; a Member whose Resource is missing |
 
 Not tested: the stores, React components, shadcn/ui files, TanStack Table itself, and the graph.
 
@@ -224,30 +230,30 @@ Not built. The migration is described in [ADR 0001](./adr/0001-no-simulated-back
 
 The design relies on these. Each was checked on 2026-10-02 against the published package and its documentation. The table, form, graph and store code was compiled under TypeScript 6 with the project's compiler options, linted with the project's ESLint config, and run in tests. The checks and the lint setup themselves are described in [tooling.md](./tooling.md).
 
-| Library                                   | Fact                                                                                                                         | Consequence                                                                                                       |
-| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| shadcn/ui (CLI 4.21)                      | Every component the design needs has a Base UI variant, including the combobox with chips and a dropdown with checkbox items | Initialise with `npx shadcn@latest init -t vite -b base`                                                          |
-| shadcn/ui                                 | The base is fixed at initialisation and cannot be changed afterwards                                                         | Chosen once, at setup                                                                                             |
-| shadcn/ui                                 | Base UI variants compose with a `render` prop, not `asChild`                                                                 | Links and triggers are composed with `render`                                                                     |
-| shadcn/ui                                 | The generated toast component imports `useTheme` from `next-themes`                                                          | `next-themes` is the theme provider, so the generated file stays untouched                                        |
-| TanStack Table 9.2                        | Tables are created with `useTable` and a `tableFeatures` registry; a feature that is not registered has no API               | Register column filtering, sorting, row selection and faceting, with the filtered, sorted and faceted row models  |
-| TanStack Table 9.2                        | `state` plus `on…Change` handlers still give full outside control; handlers receive updater functions                        | The Selection store and the address codec resolve updaters with the library's `functionalUpdate`                  |
-| TanStack Table 9.2                        | The "page rows" selection helpers act on filtered rows when no pagination is registered, and keep hidden ticked rows         | Used for the header checkbox. "Some" stays true when all are ticked, so partial is "some and not all"             |
-| TanStack Table 9.2                        | The "all rows" check `getIsSomeRowsSelected` counts hidden ticked rows                                                       | Not used                                                                                                          |
-| TanStack Table 9.2                        | Faceted unique values ignore the column's own filter and apply the others                                                    | Used for the filter counts; a value with no rows is absent from the map, so read counts with a fallback of 0      |
-| `@hookform/resolvers` 5.9 with Zod 4      | The resolver infers the form's input and output types from the schema, but untyped default values widen an enum field to `string` | Default values are annotated with the schema's input type, and `useForm` is given the input, context and output types |
-| React Flow (`@xyflow/react` 12.12)        | `colorMode` takes light, dark or system; nodes are typed without assertions                                                  | The resolved theme is passed to `colorMode`. `<ReactFlow>` is written without explicit type arguments; it infers the node type |
-| React Flow                                | `nodesDraggable`, `nodesConnectable` and `deleteKeyCode` switch off editing while pan, zoom and fit-view stay on             | The graph is read-only                                                                                            |
-| Zustand 5 `persist`                       | `merge` receives the saved value as `unknown`, and is also called with `undefined` when nothing is saved                     | The Zod parse happens in `merge` and falls back to the initial state                                              |
+| Library                              | Fact                                                                                                                              | Consequence                                                                                                                    |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| shadcn/ui (CLI 4.21)                 | Every component the design needs has a Base UI variant, including the combobox with chips and a dropdown with checkbox items      | Initialised with `pnpm dlx shadcn@latest init -t vite -b base -p nova` (Nova is the default preset)                            |
+| shadcn/ui                            | The base is fixed at initialisation and cannot be changed afterwards                                                              | Chosen once, at setup                                                                                                          |
+| shadcn/ui                            | Base UI variants compose with a `render` prop, not `asChild`                                                                      | Links and triggers are composed with `render`                                                                                  |
+| shadcn/ui                            | The generated toast component imports `useTheme` from `next-themes`                                                               | `next-themes` is the theme provider, so the generated file stays untouched                                                     |
+| TanStack Table 9.2                   | Tables are created with `useTable` and a `tableFeatures` registry; a feature that is not registered has no API                    | Register column filtering, sorting, row selection and faceting, with the filtered, sorted and faceted row models               |
+| TanStack Table 9.2                   | `state` plus `on…Change` handlers still give full outside control; handlers receive updater functions                             | The Selection store and the address codec resolve updaters with the library's `functionalUpdate`                               |
+| TanStack Table 9.2                   | The "page rows" selection helpers act on filtered rows when no pagination is registered, and keep hidden ticked rows              | Used for the header checkbox. "Some" stays true when all are ticked, so partial is "some and not all"                          |
+| TanStack Table 9.2                   | The "all rows" check `getIsSomeRowsSelected` counts hidden ticked rows                                                            | Not used                                                                                                                       |
+| TanStack Table 9.2                   | Faceted unique values ignore the column's own filter and apply the others                                                         | Used for the filter counts; a value with no rows is absent from the map, so read counts with a fallback of 0                   |
+| `@hookform/resolvers` 5.9 with Zod 4 | The resolver infers the form's input and output types from the schema, but untyped default values widen an enum field to `string` | Default values are annotated with the schema's input type, and `useForm` is given the input, context and output types          |
+| React Flow (`@xyflow/react` 12.12)   | `colorMode` takes light, dark or system; nodes are typed without assertions                                                       | The resolved theme is passed to `colorMode`. `<ReactFlow>` is written without explicit type arguments; it infers the node type |
+| React Flow                           | `nodesDraggable`, `nodesConnectable` and `deleteKeyCode` switch off editing while pan, zoom and fit-view stay on                  | The graph is read-only                                                                                                         |
+| Zustand 5 `persist`                  | `merge` receives the saved value as `unknown`, and is also called with `undefined` when nothing is saved                          | The Zod parse happens in `merge` and falls back to the initial state                                                           |
 
 The same day, the libraries were run with the React Compiler switched on:
 
-| Combination                          | Result                                                                                                                                                     | Consequence                                              |
-| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| React Compiler 1.0 with Vite         | Stable. Enabled through the React plugin's compiler preset                                                                                                 | Part of project setup                                    |
-| TanStack Table 9.2                   | A compiled child given `table` or `row` showed stale selection. Calling the methods in the column definitions and passing values worked for selection, filter and data changes | The table rule in "The React Compiler and stable objects" |
-| React Hook Form 7.89                 | `useWatch` gives a live preview. `watch()` makes the compiler skip the component. A child reading `form.formState` went stale                              | The form rule in the same section                        |
-| Zustand 5, React Flow 12             | Selectors, and nodes computed during render, updated correctly                                                                                             | None                                                     |
-| `next-themes`, shadcn/ui components  | Not run with the compiler                                                                                                                                  | Check when the shell is built                            |
+| Combination                         | Result                                                                                                                                                                         | Consequence                                               |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
+| React Compiler 1.0 with Vite        | Stable. Enabled through the React plugin's compiler preset                                                                                                                     | Part of project setup                                     |
+| TanStack Table 9.2                  | A compiled child given `table` or `row` showed stale selection. Calling the methods in the column definitions and passing values worked for selection, filter and data changes | The table rule in "The React Compiler and stable objects" |
+| React Hook Form 7.89                | `useWatch` gives a live preview. `watch()` makes the compiler skip the component. A child reading `form.formState` went stale                                                  | The form rule in the same section                         |
+| Zustand 5, React Flow 12            | Selectors, and nodes computed during render, updated correctly                                                                                                                 | None                                                      |
+| `next-themes`, shadcn/ui components | Not run with the compiler                                                                                                                                                      | Check when the shell is built                             |
 
 One thing to keep in mind: if pagination is ever added to the Resources table, the "page rows" helpers narrow to the current page, and the header checkbox would need rethinking.
