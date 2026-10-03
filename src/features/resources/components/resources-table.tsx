@@ -7,6 +7,7 @@ import {
   createFilteredRowModel,
   createSortedRowModel,
   functionalUpdate,
+  rowSelectionFeature,
   rowSortingFeature,
   tableFeatures,
   useTable,
@@ -16,6 +17,7 @@ import { ArrowDownIcon, ArrowUpIcon } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Empty, EmptyContent, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import {
   Table,
@@ -46,6 +48,7 @@ import {
   serialiseResourcesAddress,
   type ResourcesAddress,
 } from "@/features/resources/lib/resources-address";
+import { useSelectionStore } from "@/features/resources/stores/selection";
 
 const features = tableFeatures({
   columnFilteringFeature,
@@ -55,11 +58,36 @@ const features = tableFeatures({
   facetedUniqueValues: createFacetedUniqueValues(),
   rowSortingFeature,
   sortedRowModel: createSortedRowModel(),
+  rowSelectionFeature,
 });
 
 const columnHelper = createColumnHelper<typeof features, Resource>();
 
 const columns = columnHelper.columns([
+  columnHelper.display({
+    id: "select",
+    // The "page rows" helpers act on the filtered rows, since no pagination is registered, and
+    // leave hidden ticked rows alone. "Some" stays true when all are ticked.
+    header: ({ table }) => (
+      <Checkbox
+        aria-label="Select all visible rows"
+        checked={table.getIsAllPageRowsSelected()}
+        indeterminate={table.getIsSomePageRowsSelected() && !table.getIsAllPageRowsSelected()}
+        onCheckedChange={(checked) => {
+          table.toggleAllPageRowsSelected(checked);
+        }}
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        aria-label={`Select ${row.original.name}`}
+        checked={row.getIsSelected()}
+        onCheckedChange={() => {
+          useSelectionStore.getState().toggle(row.id);
+        }}
+      />
+    ),
+  }),
   columnHelper.accessor("name", {
     header: "Name",
     filterFn: searchFilterFn,
@@ -154,6 +182,10 @@ export function ResourcesTable() {
   const navigate = useNavigate();
   const { sorting, columnFilters } = parseResourcesAddress(searchParams);
   const filters = readColumnFilters(columnFilters);
+  const selectedIds = useSelectionStore((state) => state.ids);
+  const setSelectedIds = useSelectionStore((state) => state.setMany);
+  const clearSelection = useSelectionStore((state) => state.clear);
+  const rowSelection = Object.fromEntries(Array.from(selectedIds, (id) => [id, true] as const));
 
   function writeAddress(address: ResourcesAddress) {
     // Not setSearchParams, which escapes the filters' commas. Replace, so Back skips keystrokes.
@@ -168,18 +200,22 @@ export function ResourcesTable() {
     columns,
     data: rowsByName,
     getRowId: ({ id }) => id,
-    state: { sorting, columnFilters },
+    state: { sorting, columnFilters, rowSelection },
     onSortingChange: (updater) => {
       writeAddress({ sorting: functionalUpdate(updater, sorting), columnFilters });
     },
     onColumnFiltersChange: (updater) => {
       writeAddress({ sorting, columnFilters: functionalUpdate(updater, columnFilters) });
     },
+    onRowSelectionChange: (updater) => {
+      setSelectedIds(Object.keys(functionalUpdate(updater, rowSelection)));
+    },
     enableMultiSort: false,
     enableSortingRemoval: false,
   });
 
   const { rows } = table.getRowModel();
+  const visibleSelectedCount = rows.filter((row) => row.getIsSelected()).length;
 
   function clearFilters() {
     table.resetColumnFilters(true);
@@ -196,6 +232,9 @@ export function ResourcesTable() {
         onClearFilters={clearFilters}
         shownCount={rows.length}
         totalCount={rowsByName.length}
+        selectedCount={selectedIds.size}
+        hiddenSelectedCount={selectedIds.size - visibleSelectedCount}
+        onClearSelection={clearSelection}
       >
         {VALUE_FILTERS.map(({ columnId, title, options }) => {
           const column = table.getColumn(columnId);
@@ -248,7 +287,7 @@ export function ResourcesTable() {
             <NoMatchesRow onClearFilters={clearFilters} />
           ) : (
             rows.map((row) => (
-              <TableRow key={row.id}>
+              <TableRow key={row.id} data-state={row.getIsSelected() ? "selected" : undefined}>
                 {row.getAllCells().map((cell) => (
                   <TableCell key={cell.id} align={columnAlign(cell.column.id)}>
                     <table.FlexRender cell={cell} />
