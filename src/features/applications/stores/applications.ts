@@ -6,6 +6,8 @@ import { startingApplications } from "@/features/applications/lib/saved-applicat
 interface ApplicationsStore {
   /** Newest first. */
   applications: Application[];
+  /** Adds an Application with a generated id to the front of the list, and returns it. */
+  create: (application: Omit<Application, "id">) => Application;
   /** Removes the Application with this id. Its Resources are not touched. */
   remove: (id: string) => void;
 }
@@ -15,6 +17,11 @@ export const useApplicationsStore = create<ApplicationsStore>()(
   persist(
     (set, get) => ({
       applications: startingApplications(undefined),
+      create: (application) => {
+        const created = { id: crypto.randomUUID(), ...application };
+        set({ applications: [created, ...get().applications] });
+        return created;
+      },
       remove: (id) => {
         set({ applications: get().applications.filter((application) => application.id !== id) });
       },

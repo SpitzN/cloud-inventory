@@ -1,4 +1,5 @@
 import { criticalityRank } from "@/domain/criticality";
+import { resourcesWithIds } from "@/domain/dataset";
 import type { Resource } from "@/domain/resource";
 
 /** A sort comparator for Resources by name, ascending. */
@@ -22,4 +23,9 @@ export function compareResourcesByCriticalityThenOpenIssues(a: Resource, b: Reso
  */
 export function compareResourcesInDefaultOrder(a: Resource, b: Resource) {
   return compareResourcesByCriticalityThenOpenIssues(b, a) || compareResourcesByName(a, b);
+}
+
+/** The Resources with these ids, in the default order. An id with no Resource is left out. */
+export function resourcesInDefaultOrder(ids: Iterable<string>) {
+  return resourcesWithIds(ids).sort(compareResourcesInDefaultOrder);
 }

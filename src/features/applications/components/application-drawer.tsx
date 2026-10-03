@@ -12,8 +12,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { toast } from "@/components/ui/toast";
-import { resourceById } from "@/domain/dataset";
-import { compareResourcesInDefaultOrder } from "@/domain/resource-order";
+import { resourcesInDefaultOrder } from "@/domain/resource-order";
 import { DeleteApplication } from "@/features/applications/components/delete-application";
 import { ApplicationGraph } from "@/features/applications/components/graph/application-graph";
 import { MemberTable } from "@/features/applications/components/member-table";
@@ -72,9 +71,7 @@ export function ApplicationDrawer() {
   const { name, description, resourceIds } = application;
   // Members are filtered to known Resources when the Applications are loaded.
   const highlightedResourceId = hoveredResourceId ?? focusedResourceId;
-  const members = resourceIds
-    .flatMap((resourceId) => resourceById(resourceId) ?? [])
-    .toSorted(compareResourcesInDefaultOrder);
+  const members = resourcesInDefaultOrder(resourceIds);
 
   return (
     <Drawer
