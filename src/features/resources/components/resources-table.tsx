@@ -17,7 +17,6 @@ import { useNavigate, useSearchParams } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -38,6 +37,7 @@ import {
   compareResourcesByCriticalityThenOpenIssues,
   compareResourcesByName,
 } from "@/domain/resource-order";
+import { ResourcesToolbar } from "@/features/resources/components/resources-toolbar";
 import { ValueFilter } from "@/features/resources/components/value-filter";
 import { searchFilterFn, valuesFilterFn } from "@/features/resources/lib/resource-filters";
 import {
@@ -187,17 +187,16 @@ export function ResourcesTable() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-2">
-        <Input
-          type="search"
-          placeholder="Search by name"
-          aria-label="Search by name"
-          className="w-64"
-          value={filters.name ?? ""}
-          onChange={(event) => {
-            table.getColumn("name")?.setFilterValue(event.target.value);
-          }}
-        />
+      <ResourcesToolbar
+        search={filters.name ?? ""}
+        onSearchChange={(search) => {
+          table.getColumn("name")?.setFilterValue(search);
+        }}
+        isFiltered={columnFilters.length > 0}
+        onClearFilters={clearFilters}
+        shownCount={rows.length}
+        totalCount={rowsByName.length}
+      >
         {VALUE_FILTERS.map(({ columnId, title, options }) => {
           const column = table.getColumn(columnId);
           const counts = column?.getFacetedUniqueValues();
@@ -213,15 +212,7 @@ export function ResourcesTable() {
             />
           );
         })}
-        {columnFilters.length > 0 && (
-          <Button variant="ghost" onClick={clearFilters}>
-            Clear filters
-          </Button>
-        )}
-        <span className="text-sm text-muted-foreground tabular-nums">
-          {rows.length} of {rowsByName.length}
-        </span>
-      </div>
+      </ResourcesToolbar>
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (

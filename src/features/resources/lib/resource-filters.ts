@@ -16,14 +16,14 @@ export function matchesAnyValue(value: string, ticked: readonly string[]) {
 
 /** The `name` column's filter: the search. An empty search is removed from the table's state. */
 export const searchFilterFn = constructFilterFn({
-  filter: (name: string, search: string) => matchesSearch(name, search),
+  filter: matchesSearch,
   resolveFilterValue: (search) => SearchFilterSchema.parse(search),
   autoRemove: (search) => search === "",
 });
 
 /** A Provider, Environment or Criticality filter. A filter with nothing ticked is removed. */
 export const valuesFilterFn = constructFilterFn({
-  filter: (value: string, ticked: string[]) => matchesAnyValue(value, ticked),
+  filter: matchesAnyValue,
   resolveFilterValue: (ticked) => ValuesFilterSchema.parse(ticked),
   autoRemove: (ticked) => Array.isArray(ticked) && ticked.length === 0,
 });
