@@ -63,12 +63,12 @@ Rules that follow from the model:
 | Icons               | lucide-react, shadcn/ui's default                                                                                  |                                                                                                       |
 | Font                | Geist, self-hosted through `@fontsource-variable/geist`, shadcn/ui's default; the visual design pass may change it |                                                                                                       |
 | Graph               | React Flow (`@xyflow/react`)                                                                                       | [0002](./adr/0002-react-flow-for-the-graph.md)                                                        |
-| Toasts              | shadcn/ui's Sonner component                                                                                       |                                                                                                       |
+| Toasts              | shadcn/ui's toast component, built on Base UI                                                                      | [0007](./adr/0007-shadcn-ui-on-base-ui-only.md)                                                       |
 | Theme               | `next-themes`                                                                                                      |                                                                                                       |
 | Tests               | Vitest                                                                                                             |                                                                                                       |
 | Package manager     | pnpm                                                                                                               |                                                                                                       |
 
-`next-themes` has no Next.js dependency. It is used because shadcn/ui's generated toast component imports its theme hook from it, and because it already follows the system setting on the first visit and remembers the user's choice afterwards. shadcn/ui's Vite template also generates a `theme-provider.tsx` of its own; it is not used.
+`next-themes` has no Next.js dependency. It is used because it already follows the system setting on the first visit and remembers the user's choice afterwards. shadcn/ui's Vite template also generates a `theme-provider.tsx` of its own; it is not used.
 
 ## Where state lives
 
@@ -128,7 +128,7 @@ Code is organised by feature, not by file type.
 ```
 src/
   app/                  router, shell (sidebar and header), theme
-  components/ui/        shadcn/ui files, as generated
+  components/ui/        shadcn/ui components and hooks, as generated
   features/
     resources/          schema, dataset, table columns, toolbar and filters,
                         address parsing, Criticality rank, Selection store, page
@@ -231,7 +231,7 @@ The design relies on these. Each was checked on 2026-10-02 against the published
 | shadcn/ui (CLI 4.21)                 | Every component the design needs has a Base UI variant, including the combobox with chips and a dropdown with checkbox items      | Initialised with `pnpm dlx shadcn@latest init -t vite -b base -p nova` (Nova is the default preset)                            |
 | shadcn/ui                            | The base is fixed at initialisation and cannot be changed afterwards                                                              | Chosen once, at setup                                                                                                          |
 | shadcn/ui                            | Base UI variants compose with a `render` prop, not `asChild`                                                                      | Links and triggers are composed with `render`                                                                                  |
-| shadcn/ui                            | The generated toast component imports `useTheme` from `next-themes`                                                               | `next-themes` is the theme provider, so the generated file stays untouched                                                     |
+| shadcn/ui (checked 2026-10-03)       | The registry has two toast components: `toast`, on Base UI's Toast, and `sonner`, which adds the `sonner` package                 | `toast` is used. It adds no dependency and is coloured by the theme tokens; a toast is raised with `toast.add`                 |
 | TanStack Table 9.2                   | Tables are created with `useTable` and a `tableFeatures` registry; a feature that is not registered has no API                    | Register column filtering, sorting, row selection and faceting, with the filtered, sorted and faceted row models               |
 | TanStack Table 9.2                   | `state` plus `on…Change` handlers still give full outside control; handlers receive updater functions                             | The Selection store and the address codec resolve updaters with the library's `functionalUpdate`                               |
 | TanStack Table 9.2                   | The "page rows" selection helpers act on filtered rows when no pagination is registered, and keep hidden ticked rows              | Used for the header checkbox. "Some" stays true when all are ticked, so partial is "some and not all"                          |
