@@ -3,9 +3,9 @@ import { createBrowserRouter, Navigate, RouterProvider } from "react-router";
 import { ApplicationsPage } from "@/app/routes/applications";
 import { NewApplicationPage } from "@/app/routes/new-application";
 import { NotFoundPage } from "@/app/routes/not-found";
-import { ErrorScreen } from "@/app/shell/error-screen";
-import type { RouteHeaderDeclaration } from "@/app/shell/route-header";
-import { Shell } from "@/app/shell/shell";
+import { ErrorScreen } from "@/app/shell/components/error-screen";
+import { Shell } from "@/app/shell/components/shell";
+import type { RouteHeaderDeclaration } from "@/app/shell/lib/route-header";
 import { ApplicationDrawer } from "@/features/applications/components/application-drawer";
 import { ResourcesTable } from "@/features/resources/components/resources-table";
 

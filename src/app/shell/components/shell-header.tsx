@@ -1,8 +1,8 @@
 import { ChevronLeftIcon } from "lucide-react";
 import { useMatches } from "react-router";
-import { IconControl } from "@/app/shell/icon-control";
-import { routeHeader } from "@/app/shell/route-header";
-import { ThemeSwitch } from "@/app/shell/theme-switch";
+import { IconControl } from "@/app/shell/components/icon-control";
+import { ThemeSwitch } from "@/app/shell/components/theme-switch";
+import { routeHeader } from "@/app/shell/lib/route-header";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useLeaveNewApplication } from "@/features/applications/hooks/use-leave-new-application";

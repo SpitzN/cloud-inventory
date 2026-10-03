@@ -128,8 +128,9 @@ Code is organised in layers, by feature inside the middle one ([ADR 0009](./adr/
 ```
 src/
   main.tsx              entry; imported by nothing
-  app/                  app.tsx (providers, router), shell/ (sidebar, header, theme,
-                        error screen, route header), routes/ (one thin page per route)
+  app/                  app.tsx (providers, router), routes/ (one thin page per route)
+    shell/              components/ (shell, sidebar, header, theme switch, error screen),
+                        hooks/ (sidebar open), lib/ (route header)
   features/
     resources/          components/ (table, toolbar, filters), stores/ (Selection),
                         schemas/ and lib/ (address codec)
@@ -143,10 +144,15 @@ src/
   lib/                  shared pure helpers
 ```
 
+What each layer may import (`docs/tooling.md`, Import direction, is the table lint enforces):
+
 ```
-main  →  app  →  features  →  domain  →  lib
-                    ↓
-          components, hooks  →  lib, components/ui
+main               →  app/app.tsx, components/ui, index.css
+app                →  features, domain, components, hooks, lib, components/ui
+a feature          →  itself, domain, components, hooks, lib, components/ui
+domain             →  itself, lib
+components, hooks  →  each other, lib, components/ui
+lib                →  lib
 ```
 
 Features never import each other: a route under `src/app/routes/` composes them. Test files sit beside the code they test.

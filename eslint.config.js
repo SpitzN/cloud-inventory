@@ -141,11 +141,21 @@ export default defineConfig(
       // An @/ import the resolver cannot follow counts as an unknown local file, which fails lint.
       // The default would treat it as an external package and skip every boundary check.
       "boundaries/flag-as-external": { unresolvableAlias: false },
-      // An element is a folder: every file below it belongs to it. The first match wins, so the
-      // generated ui folder comes before the shared components folder that contains it.
+      // An element is a folder: every file below it belongs to it, so the folders listed are the
+      // only homes a file can have. The first match wins, so the generated ui folder comes before
+      // the shared components folder that contains it.
       "boundaries/elements": [
         { type: "ui", pattern: "src/components/ui", partialMatch: false },
-        { type: "app", pattern: "src/app", partialMatch: false },
+        {
+          type: "app",
+          pattern: [
+            "src/app/routes",
+            "src/app/shell/components",
+            "src/app/shell/hooks",
+            "src/app/shell/lib",
+          ],
+          partialMatch: false,
+        },
         {
           type: "feature",
           pattern: [
@@ -162,10 +172,19 @@ export default defineConfig(
         { type: "shared", pattern: ["src/components", "src/hooks"], partialMatch: false },
         { type: "lib", pattern: "src/lib", partialMatch: false },
       ],
-      // Single files cannot be elements; these categories make them known.
+      // Single files cannot be elements; these categories make them known. Tests are matched
+      // only where code may live, so a test in any other folder is an unknown file.
       "boundaries/files": [
         { category: "entry", pattern: "src/main.tsx" },
-        { category: "test", pattern: "src/**/*.test.{ts,tsx}" },
+        { category: "router", pattern: "src/app/app.tsx" },
+        {
+          category: "test",
+          pattern: [
+            "src/app/{routes,shell/components,shell/hooks,shell/lib}/*.test.{ts,tsx}",
+            "src/features/*/{components,hooks,stores,schemas,lib}/**/*.test.{ts,tsx}",
+            "src/{domain,components,hooks,lib}/**/*.test.{ts,tsx}",
+          ],
+        },
         { category: "style", pattern: "src/**/*.css" },
       ],
     },
@@ -179,16 +198,20 @@ export default defineConfig(
           checkInternals: true,
           checkUnknownLocals: true,
           message:
-            "This import crosses a layer boundary ({{from.element.types}} → {{to.element.types}}): see Import direction in docs/tooling.md.",
+            "This import crosses a layer boundary ({{#if from.element.types}}{{from.element.types}}{{else}}{{from.file.path}}{{/if}} → {{#if to.element.types}}{{to.element.types}}{{else}}{{to.file.path}}{{/if}}): see Import direction in docs/tooling.md.",
           policies: [
             {
               from: { file: { categories: "entry" } },
               allow: {
-                to: [{ element: { type: ["app", "ui"] } }, { file: { categories: "style" } }],
+                to: [
+                  { element: { type: "ui" } },
+                  { file: { categories: "router" } },
+                  { file: { categories: "style" } },
+                ],
               },
             },
             {
-              from: { element: { type: "app" } },
+              from: [{ element: { type: "app" } }, { file: { categories: "router" } }],
               allow: {
                 to: { element: { type: ["app", "feature", "domain", "shared", "lib", "ui"] } },
               },
