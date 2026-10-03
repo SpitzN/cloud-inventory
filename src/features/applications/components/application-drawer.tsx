@@ -1,12 +1,16 @@
 import { useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
+import { XIcon } from "lucide-react";
+import { IconControl } from "@/components/icon-control";
+import { Button } from "@/components/ui/button";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { toast } from "@/components/ui/toast";
 import { resourceById } from "@/domain/dataset";
 import { compareResourcesInDefaultOrder } from "@/domain/resource-order";
@@ -54,8 +58,9 @@ export function ApplicationDrawer() {
     .toSorted(compareResourcesInDefaultOrder);
 
   return (
-    <Sheet
+    <Drawer
       open
+      swipeDirection="right"
       onOpenChange={(open) => {
         if (open) {
           return;
@@ -69,17 +74,29 @@ export function ApplicationDrawer() {
         void navigate(-1);
       }}
     >
-      <SheetContent className="data-[side=right]:w-11/20 data-[side=right]:min-w-140 data-[side=right]:sm:max-w-none">
-        <SheetHeader>
-          <SheetTitle>
-            <span className="block truncate pr-8" title={name}>
-              {name}
-            </span>
-          </SheetTitle>
-          {description !== undefined && <SheetDescription>{description}</SheetDescription>}
-        </SheetHeader>
+      <DrawerContent variant="floating" className="w-11/20 min-w-140">
+        <DrawerHeader className="mb-4">
+          <div className="flex items-center gap-2">
+            <DrawerTitle className="min-w-0 flex-1">
+              <span className="block truncate" title={name}>
+                {name}
+              </span>
+            </DrawerTitle>
+            <IconControl
+              label="Close"
+              render={<DrawerClose render={<Button variant="ghost" size="icon-sm" />} />}
+            >
+              <XIcon />
+            </IconControl>
+          </div>
+          {description !== undefined && <DrawerDescription>{description}</DrawerDescription>}
+        </DrawerHeader>
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4">
-          <div className="h-96 shrink-0 overflow-hidden rounded-lg border">
+          {/* Dragging the graph pans it; without this, a drag to the right would swipe the drawer shut. */}
+          <div
+            data-base-ui-swipe-ignore
+            className="h-96 shrink-0 overflow-hidden rounded-lg border"
+          >
             <ApplicationGraph name={name} resources={members} />
           </div>
           <section className="flex flex-col gap-2" aria-labelledby="member-resources">
@@ -89,7 +106,7 @@ export function ApplicationDrawer() {
             <MemberTable resources={members} />
           </section>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DrawerContent>
+    </Drawer>
   );
 }

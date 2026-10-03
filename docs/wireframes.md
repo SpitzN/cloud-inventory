@@ -212,7 +212,7 @@ Behaviour: [product.md, Applications page](./product.md#applications-page).
 
 **Layout**
 
-- A drawer that opens from the right, over the Applications page, which is dimmed behind it.
+- A drawer that opens from the right, over the Applications page, which is dimmed behind it. It floats 8px in from the window's top, right and bottom edges, with rounded corners.
 - Width is about 55% of the window, with a 560px minimum, so a graph of up to 12 nodes has room.
 
 **Contents**, top to bottom:

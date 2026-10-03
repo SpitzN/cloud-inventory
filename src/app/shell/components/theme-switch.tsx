@@ -1,6 +1,6 @@
 import { MoonIcon, SunIcon } from "lucide-react";
 import { useTheme } from "next-themes";
-import { IconControl } from "@/app/shell/components/icon-control";
+import { IconControl } from "@/components/icon-control";
 import { Button } from "@/components/ui/button";
 
 /** Until it is first used, the theme follows the system. */
