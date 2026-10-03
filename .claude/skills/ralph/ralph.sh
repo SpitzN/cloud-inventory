@@ -16,8 +16,9 @@ LOCK="$REPO_ROOT/.scratch/ralph.lock"
 PROMPT_TEMPLATE="$SKILL_DIR/prompt.md"
 RATE_RE='rate.?limit|usage.?limit|hit your (session|weekly|usage|limit)|overloaded|529|too many requests|out of (extra )?usage|capacity'
 
-CMD=""; N=""; FEATURE=cloud-inventory; BASE=main; MODEL=""; EFFORT=""; PUSH=0; MAX_TURNS=250; WATCHDOG_MIN=60
-ISSUES=""; PROGRESS=""; PROGRESS_REL=""; BRANCH=""; RUNS_DIR=""
+CMD=""; N=""; FEATURE=cloud-inventory; BASE=main; MODEL=""; EFFORT=""; PUSH=1; MAX_TURNS=250; WATCHDOG_MIN=60
+ISSUES=""; PROGRESS=""; PROGRESS_REL=""; RUNS_DIR=""; PR_DIR=""; PR_DIR_REL=""
+BRANCH=""; TRUNK_REF=""; START_SHA=""; PR_URL=""
 RUN_ID=""; RUN_DIR=""; CLAUDE_PID=""; WD_PID=""; RENDER_PID=""
 CURRENT_NN=""; CURRENT_TITLE=""; CURRENT_FILE=""; CURRENT_ATTEMPT=1
 SESSION_RC=0; SESSION_SUBTYPE=""; SESSION_IS_ERROR=false; SESSION_TURNS=0; SESSION_COST=0; SESSION_ID=""; SESSION_RESULT=""; SESSION_KILLED_BY=none
@@ -38,18 +39,25 @@ commands
 
 options
   --feature <slug>        tracker directory .scratch/<slug>/ (default: cloud-inventory)
-  --base <ref>            ref the run branch feat/<slug> is created from (default: main)
+  --base <branch>         the trunk: pull requests target it, and a branch with nothing open
+                          below it starts from origin/<branch> (default: main)
+  --no-push               keep the run local: no fetch, no push, no pull request; --base is
+                          then any local ref
   --model <m>             pass --model to claude
   --effort <e>            pass --effort to claude
   --max-turns <n>         per-session turn cap (default: 250; afk only)
   --watchdog-minutes <n>  per-session wall-clock cap (default: 60; afk only)
-  --push                  push the run branch when the run ends (afk only)
 
 exit codes
   0 done, or no eligible ticket     2 usage
-  3 preflight: lock held, dirty tree, branch or tool missing
+  3 preflight: lock held, dirty tree, tool missing, fetch failed, ticket branches diverged
   4 a ticket failed twice           5 a ticket needs the owner (needs-info)
   6 rate-limit wait exhausted       130 stopped
+  7 the ticket is done; pushing its branch or opening its pull request failed (the next run publishes it)
+
+Each ticket gets its own branch, feat/<slug>-<ticket file name>, and its own pull request. The
+branch starts on top of the newest ticket branch whose work is not yet in the trunk (a stack),
+else from the trunk. A stacked pull request targets the branch below it.
 
 The ticket directory is .scratch/<slug>/issues/. In a git worktree .scratch/ is absent (it is
 git-ignored): symlink the feature directory in, e.g. ln -s <main checkout>/.scratch/<slug> .scratch/<slug>
@@ -77,15 +85,17 @@ parse_args() {
       --effort) EFFORT=${2:?--effort needs a value}; shift 2;;
       --max-turns) MAX_TURNS=${2:?--max-turns needs a value}; shift 2;;
       --watchdog-minutes) WATCHDOG_MIN=${2:?--watchdog-minutes needs a value}; shift 2;;
-      --push) PUSH=1; shift;;
+      --no-push) PUSH=0; shift;;
+      --push) shift;;  # pushing is the default; the flag is kept so older commands still run
       *) usage; die 2 "unknown option: $1";;
     esac
   done
   ISSUES="$REPO_ROOT/.scratch/$FEATURE/issues"
   PROGRESS="$REPO_ROOT/.scratch/$FEATURE/progress.md"
   PROGRESS_REL=".scratch/$FEATURE/progress.md"
-  BRANCH="feat/$FEATURE"
   RUNS_DIR="$REPO_ROOT/.scratch/$FEATURE/ralph"
+  PR_DIR="$REPO_ROOT/.scratch/$FEATURE/pr"
+  PR_DIR_REL=".scratch/$FEATURE/pr"
 }
 
 log() {
@@ -115,6 +125,9 @@ preflight_tools() {
   local t
   for t in claude jq perl git; do command -v "$t" >/dev/null 2>&1 || die 3 "$t not found on PATH"; done
   [ -f "$PROMPT_TEMPLATE" ] || die 3 "missing prompt template: $PROMPT_TEMPLATE"
+  [ "$PUSH" = 1 ] || return 0
+  command -v gh >/dev/null 2>&1 || die 3 "gh not found on PATH (it opens the pull requests; --no-push runs without it)"
+  git remote get-url origin >/dev/null 2>&1 || die 3 "no origin remote to push to (--no-push runs without one)"
 }
 
 # ---------------------------------------------------------------- tickets
@@ -233,23 +246,178 @@ assert_clean_tree() {
   [ -z "$(git status --porcelain --untracked-files=all)" ] || die 3 "working tree not clean; commit first (the loop refuses to mix its commits with yours)"
 }
 
-ensure_branch() {
-  git rev-parse --verify --quiet "$BASE^{commit}" >/dev/null || die 3 "base ref not found: $BASE"
-  local cur
-  cur=$(git branch --show-current)
-  [ "$cur" = "$BRANCH" ] && return 0
-  if git rev-parse --verify --quiet "refs/heads/$BRANCH" >/dev/null; then
-    git checkout --quiet "$BRANCH" || die 3 "could not check out $BRANCH"
-  else
-    git checkout --quiet -b "$BRANCH" "$BASE" || die 3 "could not create $BRANCH from $BASE"
-  fi
-}
-
 warn_leftovers() {
   local f
   for f in $(issue_files); do
     [ "$(parse_status "$f")" = in-progress ] || continue
     log warn "ticket $(ticket_number "$f") is in-progress from an earlier run; the picker skips it. To retry it, set its Status back to ready-for-agent."
+  done
+}
+
+# ---------------------------------------------------------------- branches and pull requests
+# One branch and one pull request per ticket. An open branch is a done ticket's branch whose
+# commits are not yet in the trunk; the open branches form the stack. A new branch starts on
+# the top of the stack, else from the trunk, and its pull request targets the branch below it.
+
+ticket_branch() { echo "feat/$FEATURE-$(basename "$1" .md)"; }  # FILE
+
+trunk_ref() { if [ "$PUSH" = 1 ]; then echo "origin/$BASE"; else echo "$BASE"; fi; }
+
+sync_trunk() {
+  if [ "$PUSH" = 1 ]; then
+    git fetch --prune --quiet origin > "$RUN_DIR/fetch.log" 2>&1 || fail_exit 3 "could not fetch origin; see $RUN_DIR/fetch.log"
+  fi
+  TRUNK_REF=$(trunk_ref)
+  git rev-parse --verify --quiet "$TRUNK_REF^{commit}" >/dev/null || fail_exit 3 "trunk not found: $TRUNK_REF"
+}
+
+# Where BRANCH lives: the local branch, else its copy on origin. Prints nothing when neither exists.
+branch_ref() {  # BRANCH
+  if git show-ref --verify --quiet "refs/heads/$1"; then echo "$1"
+  elif git show-ref --verify --quiet "refs/remotes/origin/$1"; then echo "origin/$1"
+  fi
+}
+
+# The open branches, bottom of the stack first. A branch merged some other way than a merge
+# commit is not an ancestor of the trunk; after the pruning fetch its upstream reads [gone].
+open_branches() {
+  local f br ref
+  for f in $(issue_files); do
+    [ "$(parse_status "$f")" = done ] || continue
+    br=$(ticket_branch "$f"); ref=$(branch_ref "$br")
+    [ -n "$ref" ] || continue
+    git merge-base --is-ancestor "$ref" "$TRUNK_REF" 2>/dev/null && continue
+    [ "$ref" = "$br" ] && [ "$(git for-each-ref --format='%(upstream:track)' "refs/heads/$br")" = "[gone]" ] && continue
+    printf '%s\t%s\n' "$(git rev-list --count "$TRUNK_REF..$ref")" "$br"
+  done | sort -n | cut -f2
+}
+
+# The top of the stack; prints nothing when no branch is open. Fails when the open branches
+# have diverged: the top has to contain every other one.
+stack_top() {
+  local all top b
+  all=$(open_branches)
+  [ -n "$all" ] || return 0
+  top=$(printf '%s\n' "$all" | tail -n 1)
+  for b in $all; do
+    git merge-base --is-ancestor "$(branch_ref "$b")" "$(branch_ref "$top")" || return 1
+  done
+  echo "$top"
+}
+
+# The pull request base for BRANCH: the nearest open branch below it, else the trunk.
+pr_base() {  # BRANCH
+  local b base=$BASE self
+  self=$(branch_ref "$1")
+  for b in $(open_branches); do
+    [ "$b" = "$1" ] && continue
+    git merge-base --is-ancestor "$(branch_ref "$b")" "$self" 2>/dev/null && base=$b
+  done
+  echo "$base"
+}
+
+# Bring into the new branch what reached the trunk after the stack was cut: a review fix, another
+# pull request. Skipped when the trunk adds no content, so a plain merge of a lower pull
+# request leaves no merge commit here.
+merge_trunk() {
+  git merge-base --is-ancestor "$TRUNK_REF" HEAD && return 0
+  [ "$(git merge-tree --write-tree HEAD "$TRUNK_REF" 2>/dev/null)" = "$(git rev-parse 'HEAD^{tree}')" ] && return 0
+  if ! git merge --quiet --no-edit "$TRUNK_REF" > "$RUN_DIR/merge.log" 2>&1; then
+    git merge --abort 2>/dev/null
+    fail_exit 3 "merging $TRUNK_REF into $BRANCH conflicts. On $BRANCH, merge $TRUNK_REF by hand and commit, then run again"
+  fi
+  log branch merged=$TRUNK_REF into=$BRANCH
+}
+
+# The session starts with the dependencies its branch declares.
+refresh_install() {
+  [ -f "$REPO_ROOT/package.json" ] && [ -f "$REPO_ROOT/pnpm-lock.yaml" ] || return 0
+  pnpm install --frozen-lockfile --prefer-offline > "$RUN_DIR/install.log" 2>&1 \
+    || fail_exit 3 "pnpm install failed on $BRANCH; see $RUN_DIR/install.log"
+}
+
+# Check out the ticket's branch. A branch that already holds commits of its own is continued;
+# otherwise it is cut fresh. Sets BRANCH and START_SHA, the commit the ticket's work starts from.
+start_branch() {  # FILE
+  local top start
+  BRANCH=$(ticket_branch "$1")
+  top=$(stack_top) || fail_exit 3 "open ticket branches have diverged ($(open_branches | tr '\n' ' ')): merge their pull requests, lowest first, then run again"
+  start=$TRUNK_REF
+  [ -n "$top" ] && start=$(branch_ref "$top")
+  if git show-ref --verify --quiet "refs/heads/$BRANCH" && ! git merge-base --is-ancestor "$BRANCH" "$start"; then
+    git checkout --quiet "$BRANCH" || fail_exit 3 "could not check out $BRANCH"
+    START_SHA=$(git merge-base "$BRANCH" "$start")
+    log branch name=$BRANCH continued=yes start=$START_SHA
+  else
+    git checkout --quiet -B "$BRANCH" --no-track "$start" || fail_exit 3 "could not create $BRANCH from $start"
+    merge_trunk
+    START_SHA=$(git rev-parse HEAD)
+    log branch name=$BRANCH from=$start start=$START_SHA
+  fi
+  refresh_install
+}
+
+# The pull request body: a stacked-on line when the pull request targets another ticket's
+# branch, then the session's file or a generated stand-in, then the attribution footer.
+compose_pr_body() {  # BRANCH NN TITLE BASE BELOW_PR OUT
+  local br=$1 nn=$2 title=$3 base=$4 below=$5 out=$6 src="$PR_DIR/$2.md" from=$TRUNK_REF
+  [ "$base" != "$BASE" ] && from=$(branch_ref "$base")
+  {
+    if [ "$base" != "$BASE" ]; then
+      printf '> Stacked on %s`%s`: merge that pull request first, with a merge commit. GitHub then points this one at `%s`.\n\n' \
+        "${below:+#$below, }" "$base" "$BASE"
+    fi
+    if [ -s "$src" ]; then
+      cat "$src"
+    else
+      printf '## Summary\n\nTicket %s: %s\n\n```text\n%s\n```\n\nThe session wrote no pull request body; the loop generated this one from the commits.\n' \
+        "$nn" "$title" "$(git log --first-parent --no-merges --format='%h %s' "$from..$(branch_ref "$br")" 2>/dev/null)"
+    fi
+    grep -qs 'Generated with \[Claude Code\]' "$src" || printf '\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n'
+  } > "$out"
+}
+
+# Push BRANCH and make sure it has a pull request. Sets PR_URL. Safe to repeat: an up-to-date
+# branch is not pushed again, and a branch that ever had a pull request gets no second one.
+publish() {  # BRANCH FILE
+  local br=$1 file=$2 nn title try plog
+  PR_URL=""
+  if [ "$PUSH" != 1 ]; then PR_URL="none (--no-push)"; return 0; fi
+  nn=$(ticket_number "$file"); title=$(ticket_title "$file"); plog="$RUN_DIR/$nn.publish.log"
+  for try in 1 2 3; do
+    if publish_once "$br" "$nn" "$title" >> "$plog" 2>&1; then
+      log publish ticket=$nn branch=$br pr=$PR_URL
+      return 0
+    fi
+    log warn "publish ticket=$nn try=$try of=3 failed; see $plog"
+    if (( try < 3 )); then sleep "${RALPH_RETRY_SLEEP:-20}" & wait $!; fi
+  done
+  return 1
+}
+
+publish_once() {  # BRANCH NN TITLE
+  local br=$1 nn=$2 title=$3 base below body
+  if git show-ref --verify --quiet "refs/heads/$br"; then
+    if ! git show-ref --verify --quiet "refs/remotes/origin/$br" || [ -n "$(git rev-list -1 "origin/$br..$br")" ]; then
+      git push --quiet -u origin "$br" || return 1
+    fi
+  fi
+  PR_URL=$(gh pr list --head "$br" --state all --json url --jq '.[0].url // empty') || return 1
+  [ -n "$PR_URL" ] && return 0
+  base=$(pr_base "$br"); below=""
+  [ "$base" != "$BASE" ] && below=$(gh pr list --head "$base" --state open --json number --jq '.[0].number // empty')
+  body="$RUN_DIR/$nn.pr-body.md"
+  compose_pr_body "$br" "$nn" "$title" "$base" "$below" "$body"
+  PR_URL=$(gh pr create --base "$base" --head "$br" --title "Ticket $nn: $title" --body-file "$body" | tail -n 1)
+  [ -n "$PR_URL" ]
+}
+
+# A ticket closed by a run whose push or pull request failed is published before anything is picked.
+publish_pending() {
+  [ "$PUSH" = 1 ] || return 0
+  local b
+  for b in $(open_branches); do
+    publish "$b" "$ISSUES/${b#"feat/$FEATURE-"}.md" || fail_exit 7 "could not publish $b (run dir: $RUN_DIR)"
   done
 }
 
@@ -266,6 +434,7 @@ render_prompt() {  # FILE NN TITLE BASE_SHA PREFACE OUT
   t=${t//"{{PROGRESS_PATH}}"/$PROGRESS_REL}
   t=${t//"{{BASE_SHA}}"/$base}
   t=${t//"{{BRANCH}}"/$BRANCH}
+  t=${t//"{{PR_BODY_PATH}}"/$PR_DIR_REL/$nn.md}
   t=${t//"{{RETRY_PREFACE}}"/$preface}
   printf '%s\n' "$t" > "$out"
 }
@@ -462,30 +631,35 @@ gate() {  # NN BASE_SHA LABEL -> GATE_REASON, CHECK_STATE
     printf '\n## %s %s (ralph fallback)\n\nThe session wrote no entry. Commits: %s..%s\n' \
       "$nn" "$(ticket_title "$file")" "$(git rev-parse --short "$base")" "$(git rev-parse --short HEAD)" >> "$PROGRESS"
   fi
+  if [ "$PUSH" = 1 ] && [ ! -s "$PR_DIR/$nn.md" ]; then
+    log warn "ticket $nn: no pull request body at $PR_DIR_REL/$nn.md; the loop generates one from the commits"
+    echo "warn: no pull request body" >> "$glog"
+  fi
   echo "pass check=$CHECK_STATE" >> "$glog"
   return 0
 }
 
 # ---------------------------------------------------------------- records
 
-record_outcome() {  # NN TITLE ATTEMPTS STATUS
-  local nn=$1 title=$2 attempts=$3 status=$4 turns cost unticked tsv="$RUN_DIR/tickets.tsv"
+record_outcome() {  # NN TITLE ATTEMPTS STATUS [PULL_REQUEST]
+  local nn=$1 title=$2 attempts=$3 status=$4 pr=${5:-} turns cost unticked tsv="$RUN_DIR/tickets.tsv"
   turns=$(cat "$RUN_DIR/$nn"-*.json 2>/dev/null | jq -s '[.[] | .num_turns // 0] | add // 0')
   cost=$(cat "$RUN_DIR/$nn"-*.json 2>/dev/null | jq -s '[.[] | .total_cost_usd // 0] | add // 0 | . * 100 | round / 100')
   unticked=$(unticked_boxes "$(ticket_file "$nn")" | wc -l | tr -d ' ')
   touch "$tsv"
   grep -v "^$nn	" "$tsv" > "$tsv.tmp" 2>/dev/null; mv "$tsv.tmp" "$tsv"
-  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$nn" "$title" "$attempts" "${turns:-0}" "${cost:-0}" "$status" "$unticked" >> "$tsv"
+  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$nn" "$title" "$attempts" "${turns:-0}" "${cost:-0}" "$status" "$unticked" "${pr:--}" >> "$tsv"
 }
 
 summarise() {
-  local tsv="$RUN_DIR/tickets.tsv" out="$RUN_DIR/summary.txt" nn title attempts turns cost status unticked
+  local tsv="$RUN_DIR/tickets.tsv" out="$RUN_DIR/summary.txt" nn title attempts turns cost status unticked pr
   {
-    echo "ralph run $RUN_ID  feature=$FEATURE  branch=$BRANCH  dir=$RUN_DIR"
+    echo "ralph run $RUN_ID  feature=$FEATURE  trunk=${TRUNK_REF:-?}  dir=$RUN_DIR"
     if [ -s "$tsv" ]; then
       printf '%-3s %-45s %-8s %-6s %-8s %-12s %s\n' ticket title attempts turns cost status unticked
-      while IFS=$'\t' read -r nn title attempts turns cost status unticked; do
+      while IFS=$'\t' read -r nn title attempts turns cost status unticked pr; do
         printf '%-3s %-45.45s %-8s %-6s %-8s %-12s %s\n' "$nn" "$title" "$attempts" "$turns" "$cost" "$status" "$unticked"
+        [ "${pr:--}" != - ] && echo "      pull request: $pr"
         unticked_boxes "$(ticket_file "$nn")" | sed 's/^/      - /'
       done < "$tsv"
     else
@@ -536,10 +710,12 @@ on_exit() {
 
 cmd_dry_run() {
   preflight_tickets
-  local sim="" f nn i=0 blockers
-  echo "ralph dry-run  feature=$FEATURE  tickets=$(issue_files | wc -l | tr -d ' ')  branch=$BRANCH"
+  local sim="" f nn i=0 blockers first="" open top br start
+  TRUNK_REF=$(trunk_ref)
+  echo "ralph dry-run  feature=$FEATURE  tickets=$(issue_files | wc -l | tr -d ' ')  trunk=$TRUNK_REF"
   echo "order:"
   while f=$(pick_next "$sim"); do
+    [ -n "$first" ] || first=$f
     nn=$(ticket_number "$f"); i=$((i + 1)); sim="$sim $nn"
     blockers=$(parse_blockers "$f" "$nn"); [ -n "$blockers" ] || blockers=none
     printf '  %2d. %s %-55.55s blocked by: %s\n' "$i" "$nn" "$(ticket_title "$f")" "$blockers"
@@ -551,6 +727,26 @@ cmd_dry_run() {
     [ "$(parse_status "$f")" = done ] && continue
     printf '  %s %-55.55s %s\n' "$nn" "$(ticket_title "$f")" "$(explain_ineligible "$f" "$sim")"
   done
+  # Where the first ticket's branch would start, read from the refs as the last fetch left them.
+  if ! git rev-parse --verify --quiet "$TRUNK_REF^{commit}" >/dev/null; then
+    echo "branches: trunk $TRUNK_REF not found in this checkout"
+    return 0
+  fi
+  open=$(open_branches | tr '\n' ' ')
+  echo "open ticket branches, bottom first (as of the last fetch): ${open:-none}"
+  [ -n "$first" ] || return 0
+  br=$(ticket_branch "$first")
+  if ! top=$(stack_top); then
+    echo "next branch: $br cannot start: the open branches have diverged; merge their pull requests, lowest first"
+    return 0
+  fi
+  start=$TRUNK_REF
+  [ -n "$top" ] && start=$(branch_ref "$top")
+  if git show-ref --verify --quiet "refs/heads/$br" && ! git merge-base --is-ancestor "$br" "$start"; then
+    echo "next branch: $br, continued from an earlier session"
+  else
+    echo "next branch: $br from ${top:-$TRUNK_REF}"
+  fi
 }
 
 cmd_afk() {
@@ -560,19 +756,21 @@ cmd_afk() {
   trap on_term TERM INT
   trap on_exit EXIT
   assert_clean_tree
-  ensure_branch
-  RUN_DIR="$RUNS_DIR/$RUN_ID"; mkdir -p "$RUN_DIR"
+  RUN_DIR="$RUNS_DIR/$RUN_ID"; mkdir -p "$RUN_DIR" "$PR_DIR"
   ensure_progress
-  log start iterations=$N feature=$FEATURE branch=$BRANCH base=$BASE max_turns=$MAX_TURNS watchdog_minutes=$WATCHDOG_MIN model=${MODEL:-default} effort=${EFFORT:-default} pid=$$
+  sync_trunk
+  log start iterations=$N feature=$FEATURE trunk=$TRUNK_REF push=$PUSH max_turns=$MAX_TURNS watchdog_minutes=$WATCHDOG_MIN model=${MODEL:-default} effort=${EFFORT:-default} pid=$$
   warn_leftovers
-  local completed=0 file nn title base_sha attempt relaunch preface label reason detail now
+  publish_pending
+  local completed=0 file nn title base_sha attempt relaunch preface label reason detail now range
   while (( completed < N )); do
     if ! file=$(pick_next); then log "pick none=no-eligible-ticket"; break; fi
-    nn=$(ticket_number "$file"); title=$(ticket_title "$file"); base_sha=$(git rev-parse HEAD)
+    nn=$(ticket_number "$file"); title=$(ticket_title "$file")
+    start_branch "$file"; base_sha=$START_SHA
     CURRENT_NN=$nn; CURRENT_TITLE=$title; CURRENT_FILE=$file; CURRENT_ATTEMPT=1
-    log pick ticket=$nn title="$title" base=$base_sha
+    log pick ticket=$nn title="$title" branch=$BRANCH base=$base_sha
     set_status "$file" in-progress
-    append_comment "$file" "picked; base commit $base_sha"
+    append_comment "$file" "picked; branch $BRANCH; base commit $base_sha"
     log status ticket=$nn status=in-progress
     attempt=1; relaunch=0; preface=""
     while :; do
@@ -636,16 +834,23 @@ cmd_afk() {
       fail_exit 4 "ticket $nn failed twice: $reason"
     done
     set_status "$file" done
-    append_comment "$file" "done after $attempt attempt(s); commits $(git rev-parse --short "$base_sha")..$(git rev-parse --short HEAD)"
     log status ticket=$nn status=done
-    record_outcome "$nn" "$title" "$attempt" done
-    log ticket ticket=$nn result=done attempts=$attempt unticked=$(unticked_boxes "$file" | wc -l | tr -d ' ')
-    completed=$((completed + 1))
     CURRENT_NN=""; CURRENT_TITLE=""; CURRENT_FILE=""
+    range="$(git rev-parse --short "$base_sha")..$(git rev-parse --short HEAD)"
+    echo "current=$nn attempt=$attempt label=$label phase=publish" > "$RUN_DIR/state"
+    if ! publish "$BRANCH" "$file"; then
+      append_comment "$file" "done after $attempt attempt(s); commits $range; branch $BRANCH; not published yet: the next run pushes the branch and opens the pull request"
+      record_outcome "$nn" "$title" "$attempt" done "not published"; summarise >/dev/null
+      notify "ralph: ticket $nn is done, publishing failed"
+      fail_exit 7 "ticket $nn is done; pushing $BRANCH or opening its pull request failed. Run again to publish it"
+    fi
+    append_comment "$file" "done after $attempt attempt(s); commits $range; branch $BRANCH; pull request $PR_URL"
+    record_outcome "$nn" "$title" "$attempt" done "$PR_URL"
+    log ticket ticket=$nn result=done attempts=$attempt unticked=$(unticked_boxes "$file" | wc -l | tr -d ' ') pr="$PR_URL"
+    completed=$((completed + 1))
+    # the owner may have merged a pull request while the session ran
+    (( completed < N )) && sync_trunk
   done
-  if [ "$PUSH" = 1 ]; then
-    if git push -u origin "$BRANCH" > "$RUN_DIR/push.log" 2>&1; then log push result=ok branch=$BRANCH; else log warn "push failed; see $RUN_DIR/push.log"; fi
-  fi
   summarise
   notify "ralph $RUN_ID finished: $completed ticket(s) done"
   log "run finished exit=0 completed=$completed"
@@ -659,23 +864,26 @@ cmd_once() {
   acquire_lock
   trap on_exit EXIT
   assert_clean_tree
-  ensure_branch
-  RUN_DIR="$RUNS_DIR/$RUN_ID"; mkdir -p "$RUN_DIR"
+  RUN_DIR="$RUNS_DIR/$RUN_ID"; mkdir -p "$RUN_DIR" "$PR_DIR"
   ensure_progress
-  local file="" nn title base_sha now preface="" f rc
+  sync_trunk
+  publish_pending
+  local file="" nn title base_sha now preface="" f rc resumed=0 range
   # a ticket left in-progress by an earlier session is resumed first
   for f in $(issue_files); do
-    if [ "$(parse_status "$f")" = in-progress ]; then file=$f; break; fi
+    if [ "$(parse_status "$f")" = in-progress ]; then file=$f; resumed=1; break; fi
   done
-  if [ -n "$file" ]; then
-    preface=$(build_retry_preface "resume" "an earlier session left this ticket in-progress without passing the gate" "" "$(git rev-parse HEAD)")
-  elif ! file=$(pick_next); then
+  if [ -z "$file" ] && ! file=$(pick_next); then
     echo "ralph: no eligible ticket"; exit 0
   fi
-  nn=$(ticket_number "$file"); title=$(ticket_title "$file"); base_sha=$(git rev-parse HEAD)
-  log start mode=once ticket=$nn title="$title" base=$base_sha branch=$BRANCH
+  nn=$(ticket_number "$file"); title=$(ticket_title "$file")
+  start_branch "$file"; base_sha=$START_SHA
+  if [ "$resumed" = 1 ]; then
+    preface=$(build_retry_preface "resume" "an earlier session left this ticket in-progress without passing the gate" "" "$base_sha")
+  fi
+  log start mode=once ticket=$nn title="$title" base=$base_sha branch=$BRANCH trunk=$TRUNK_REF push=$PUSH
   set_status "$file" in-progress
-  append_comment "$file" "picked (once); base commit $base_sha"
+  append_comment "$file" "picked (once); branch $BRANCH; base commit $base_sha"
   render_prompt "$file" "$nn" "$title" "$base_sha" "$preface" "$RUN_DIR/$nn-once.prompt.md"
   local -a extra=()
   [ -n "$MODEL" ] && extra+=(--model "$MODEL")
@@ -696,10 +904,16 @@ cmd_once() {
   fi
   if gate "$nn" "$base_sha" once; then
     set_status "$file" done
-    append_comment "$file" "done (once); commits $(git rev-parse --short "$base_sha")..$(git rev-parse --short HEAD)"
     log gate ticket=$nn result=pass check=$CHECK_STATE
     log status ticket=$nn status=done
-    record_outcome "$nn" "$title" 1 done; summarise
+    range="$(git rev-parse --short "$base_sha")..$(git rev-parse --short HEAD)"
+    if ! publish "$BRANCH" "$file"; then
+      append_comment "$file" "done (once); commits $range; branch $BRANCH; not published yet: the next run pushes the branch and opens the pull request"
+      record_outcome "$nn" "$title" 1 done "not published"; summarise
+      fail_exit 7 "ticket $nn is done; pushing $BRANCH or opening its pull request failed. Run again to publish it"
+    fi
+    append_comment "$file" "done (once); commits $range; branch $BRANCH; pull request $PR_URL"
+    record_outcome "$nn" "$title" 1 done "$PR_URL"; summarise
     log "run finished exit=0"
     exit 0
   fi
