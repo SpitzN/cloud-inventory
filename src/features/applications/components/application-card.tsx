@@ -1,15 +1,20 @@
 import { Link } from "react-router";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Application } from "@/domain/application";
+import { criticalityTone, mostCritical } from "@/domain/criticality";
+import { resourcesWithIds } from "@/domain/dataset";
 
-/** One Application as a card that is, as a whole, a link to its drawer. */
 export function ApplicationCard({ application }: { application: Application }) {
   const { id, name, description, resourceIds } = application;
+  const members = resourcesWithIds(resourceIds);
+  const openIssues = members.reduce((sum, member) => sum + member.openIssues, 0);
+  const criticality = mostCritical(members.map((member) => member.criticality));
 
   return (
     <Link
       to={`/applications/${id}`}
-      className="rounded-xl outline-none hover:shadow-md focus-visible:ring-3 focus-visible:ring-ring/50 active:shadow-none"
+      className="rounded-xl transition outline-none hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-3 focus-visible:ring-ring/50 motion-reduce:hover:translate-y-0"
     >
       <Card className="h-full">
         <CardHeader>
@@ -28,10 +33,26 @@ export function ApplicationCard({ application }: { application: Application }) {
             )}
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <span className="tabular-nums">
-            {resourceIds.length} {resourceIds.length === 1 ? "resource" : "resources"}
-          </span>
+        <CardContent className="mt-auto">
+          <div className="flex items-center gap-2">
+            <span className="flex-1 whitespace-nowrap tabular-nums">
+              {members.length} {members.length === 1 ? "resource" : "resources"}
+              {members.length > 0 && (
+                <>
+                  <span className="text-muted-foreground"> · </span>
+                  <span className={openIssues === 0 ? "text-muted-foreground" : undefined}>
+                    {openIssues} {openIssues === 1 ? "open issue" : "open issues"}
+                  </span>
+                </>
+              )}
+            </span>
+            {criticality !== undefined && (
+              <Badge variant={criticalityTone(criticality)}>
+                <span className="sr-only">Most critical member: </span>
+                {criticality}
+              </Badge>
+            )}
+          </div>
         </CardContent>
       </Card>
     </Link>

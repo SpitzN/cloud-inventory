@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compareCriticality, criticalityRank } from "@/domain/criticality";
+import { compareCriticality, criticalityRank, mostCritical } from "@/domain/criticality";
 import type { Criticality } from "@/domain/resource";
 
 describe("criticalityRank", () => {
@@ -19,5 +19,15 @@ describe("compareCriticality", () => {
 
   it("treats equal levels as a tie", () => {
     expect(compareCriticality("high", "high")).toBe(0);
+  });
+});
+
+describe("mostCritical", () => {
+  it("picks the most critical level", () => {
+    expect(mostCritical(["low", "high", "medium", "high"])).toBe("high");
+  });
+
+  it("is undefined for no levels", () => {
+    expect(mostCritical([])).toBeUndefined();
   });
 });

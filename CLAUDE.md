@@ -9,6 +9,7 @@ This repository is public. The domain is described as "a cloud security company"
 - `GLOSSARY.md`: the domain terms. Use them in code names, UI copy, commits and docs.
 - `docs/product.md`: what each screen does. Read before changing behaviour.
 - `docs/wireframes.md`: how each screen looks. Read before building or changing a screen.
+- `DESIGN.md`: the visual system: tokens, type, depth, motion and component styles. Read before changing how anything looks.
 - `docs/architecture.md`: stack, where state lives, units, tests, verified library facts. Read before adding a module or a dependency.
 - `docs/tooling.md`: the checks, what lint enforces and why. Read when a check fails for a reason you do not recognise.
 - `docs/dataset.md`: the twelve Resources and the example Application.

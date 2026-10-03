@@ -191,11 +191,27 @@ function DrawerFooter({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-function DrawerTitle({ className, ...props }: DrawerPrimitive.Title.Props) {
+const drawerTitleVariants = cva("font-heading text-base font-medium text-foreground", {
+  variants: {
+    size: {
+      default: "",
+      large: "text-xl font-semibold",
+    },
+  },
+  defaultVariants: {
+    size: "default",
+  },
+});
+
+function DrawerTitle({
+  className,
+  size,
+  ...props
+}: DrawerPrimitive.Title.Props & VariantProps<typeof drawerTitleVariants>) {
   return (
     <DrawerPrimitive.Title
       data-slot="drawer-title"
-      className={cn("font-heading text-base font-medium text-foreground", className)}
+      className={cn(drawerTitleVariants({ size }), className)}
       {...props}
     />
   );

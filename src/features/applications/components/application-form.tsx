@@ -12,15 +12,6 @@ import {
   type ApplicationFormValues,
 } from "@/features/applications/schemas/application-form";
 
-/**
- * The form that creates an Application: name, description and Members. It starts from
- * `startingValues` and rejects a name in `namesInUse`. Validation runs on submit and then as
- * fields change; errors show under their field and focus moves to the first invalid one.
- * `onSubmit` receives the parsed values only when they are valid.
- *
- * `preview` is given the form's `control`, so what it returns can follow the fields as they
- * change. It is rendered after the form, as its sibling, for the caller's layout to place.
- */
 export function ApplicationForm({
   startingValues,
   namesInUse,
@@ -60,6 +51,7 @@ export function ApplicationForm({
                   {...field}
                   id={`${id}-name`}
                   autoComplete="off"
+                  aria-required
                   aria-invalid={fieldState.invalid}
                   aria-describedby={fieldState.invalid ? `${id}-name-error` : undefined}
                 />
@@ -98,6 +90,7 @@ export function ApplicationForm({
                   ref={field.ref}
                   id={`${id}-resources`}
                   value={field.value}
+                  aria-required
                   aria-invalid={fieldState.invalid}
                   aria-describedby={fieldState.invalid ? `${id}-resources-error` : undefined}
                   onValueChange={field.onChange}

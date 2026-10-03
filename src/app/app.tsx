@@ -2,26 +2,23 @@ import { ThemeProvider } from "next-themes";
 import { createBrowserRouter, Navigate } from "react-router";
 // The DOM build, which carries out a navigation's `flushSync` option.
 import { RouterProvider } from "react-router/dom";
-import { ApplicationsPage } from "@/app/routes/applications";
-import { NewApplicationPage } from "@/app/routes/new-application";
 import { NotFoundPage } from "@/app/routes/not-found";
 import { ErrorScreen } from "@/app/shell/components/error-screen";
 import { Shell } from "@/app/shell/components/shell";
 import type { RouteHeaderDeclaration } from "@/app/shell/lib/route-header";
-import { ApplicationDrawer } from "@/features/applications/components/application-drawer";
 import { ResourcesTable } from "@/features/resources/components/resources-table";
 
 const router = createBrowserRouter([
   { path: "/", element: <Navigate to="/resources" replace /> },
   {
     element: <Shell />,
-    // An error in the shell itself, such as a route header that does not parse, takes the shell
-    // with it; the error screen is shown on its own.
     errorElement: <ErrorScreen />,
     children: [
       {
-        // Pathless, so an error replaces only the page content and the shell stays.
+        // Pathless, so an error replaces only the page content. Without a fallback, a first load
+        // of a lazy page renders nothing until it arrives.
         errorElement: <ErrorScreen />,
+        HydrateFallback: EmptyContent,
         children: [
           {
             path: "resources",
@@ -30,13 +27,19 @@ const router = createBrowserRouter([
           },
           {
             path: "applications",
-            element: <ApplicationsPage />,
+            lazy: {
+              Component: async () => (await import("@/app/routes/applications")).ApplicationsPage,
+            },
             handle: { title: "Applications" } satisfies RouteHeaderDeclaration,
-            children: [{ path: ":id", element: <ApplicationDrawer /> }],
+            // The Applications page renders the drawer; `null`, unlike none, avoids a dev warning.
+            children: [{ path: ":id", element: null }],
           },
           {
             path: "applications/new",
-            element: <NewApplicationPage />,
+            lazy: {
+              Component: async () =>
+                (await import("@/app/routes/new-application")).NewApplicationPage,
+            },
             handle: {
               title: "New application",
               backChevron: true,
@@ -53,10 +56,13 @@ const router = createBrowserRouter([
   },
 ]);
 
+function EmptyContent() {
+  return null;
+}
+
 export function App() {
   return (
-    // React never runs a script rendered on the client, and logs an error for one unless it is a
-    // data block. next-themes applies the theme from an effect here, so its inline script is inert.
+    // next-themes' inline script would make React log an error; as a data block it is inert.
     <ThemeProvider
       attribute="class"
       disableTransitionOnChange

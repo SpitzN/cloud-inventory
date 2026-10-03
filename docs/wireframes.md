@@ -2,7 +2,7 @@
 
 How each screen of Cloud Inventory looks: its layout, what sits in each region, and the states a user can see. What each screen does is in [product.md](./product.md). Terms are defined in [GLOSSARY.md](../GLOSSARY.md).
 
-These are layout wireframes, not a visual design. Colour, type and spacing come from shadcn/ui's defaults in this version; the visual design pass is a later phase.
+These are layout wireframes, not a visual design. Colour, type, spacing, depth and motion are in [DESIGN.md](../DESIGN.md), and the tokens behind them in `src/index.css`.
 
 Every screen assumes a viewport 1280px wide or more ([ADR 0006](./adr/0006-desktop-only.md)).
 
@@ -153,7 +153,9 @@ Behaviour: [product.md, New application page](./product.md#new-application-page)
 +----------------------+  +----------------------+  +----------------------+
 | Checkout             |  | Payments API         |  | Data Platform        |
 | Cart, orders and ... |  | Card processing ...  |  | Analytics wareho...  |
-| 3 resources          |  | 5 resources          |  | 5 resources          |
+|                      |  |                      |  |                      |
+| 3 resources ·        |  | 5 resources ·        |  | 5 resources ·        |
+| 6 open issues  (crit)|  | 14 open issues (crit)|  | 15 open issues (high)|
 +----------------------+  +----------------------+  +----------------------+
 ```
 
@@ -165,7 +167,9 @@ Behaviour: [product.md, New application page](./product.md#new-application-page)
 **Cards**
 
 - A grid of cards, newest first.
-- Each card shows only what the Application holds: name, description, and Member count ("5 resources", "1 resource").
+- Each card shows the name and description at the top. Its bottom line reads "5 resources · 15 open issues", with the Members' most critical level at the right as the same Criticality badge as the Resources table. The line sits at the bottom of the card, so the lines of a row of cards align.
+- Counts agree with their number: "1 resource", "1 open issue". "0 open issues" is muted. With no Members the line reads "0 resources" alone, with no badge.
+- A screen reader hears the badge as "most critical member: high", so the card's link does not end in a bare level.
 - A missing description reads "No description" in muted text. A long description is clamped to two lines.
 - The whole card is one link.
 
@@ -189,6 +193,7 @@ Behaviour: [product.md, New application page](./product.md#new-application-page)
 **Why this, not that**
 
 - Cards, not table rows. With three facts per Application, the row list looked poor in the wireframes.
+- The most critical level, not a count at every level. One badge per card keeps Criticality the one loud thing on the page and the grid quick to scan; the drawer's Member table has the full breakdown.
 
 Behaviour: [product.md, Applications page](./product.md#applications-page).
 
@@ -256,6 +261,6 @@ Behaviour: [product.md, Graph](./product.md#graph).
 
 ## Feedback and fallback screens
 
-- **Toasts:** a short message at the edge of the window. Used after creating an Application (naming it), after deleting one, and when an Application is not found.
+- **Toasts:** a short message at the edge of the window. Used after creating an Application (naming it), after deleting one, and when an Application is not found. The creation toast is a success toast: tinted with the success colour and marked with a check, so it stands out from the drawer it appears over.
 - **Not-found page:** shown inside the shell for an unknown address, with a way back to Resources.
 - **Error screen:** shown in place of the page content after an unexpected error, with a way back to Resources.

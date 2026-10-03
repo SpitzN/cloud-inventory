@@ -10,12 +10,6 @@ import {
 import { criticalityTone } from "@/domain/criticality";
 import type { Resource } from "@/domain/resource";
 
-/**
- * An Application's Members as a table, in the order given. The row whose id is
- * `highlightedResourceId` is shown highlighted. Each row can take keyboard focus.
- * `onResourceHover` is called with a row's Resource id when the pointer enters it and with
- * `undefined` when it leaves; `onResourceFocus` likewise when a row takes and loses focus.
- */
 export function MemberTable({
   resources,
   highlightedResourceId,
@@ -28,57 +22,66 @@ export function MemberTable({
   onResourceFocus: (resourceId: string | undefined) => void;
 }) {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Type</TableHead>
-          <TableHead>Criticality</TableHead>
-          <TableHead align="end">Open issues</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {resources.length === 0 ? (
+    <div className="-mx-2">
+      <Table>
+        <TableHeader>
           <TableRow>
-            <TableCell colSpan={4}>
-              <span className="block text-center text-muted-foreground">No member resources</span>
-            </TableCell>
+            <TableHead>Name</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Criticality</TableHead>
+            <TableHead align="end">Open issues</TableHead>
           </TableRow>
-        ) : (
-          resources.map(({ id, name, type, criticality, openIssues }) => (
-            <TableRow
-              key={id}
-              highlighted={id === highlightedResourceId}
-              tabIndex={0}
-              onMouseEnter={() => {
-                onResourceHover(id);
-              }}
-              onMouseLeave={() => {
-                onResourceHover(undefined);
-              }}
-              onFocus={() => {
-                onResourceFocus(id);
-              }}
-              onBlur={() => {
-                onResourceFocus(undefined);
-              }}
-            >
-              <TableCell>
-                <span className="block max-w-48 truncate" title={name}>
-                  {name}
-                </span>
-              </TableCell>
-              <TableCell>{type}</TableCell>
-              <TableCell>
-                <Badge variant={criticalityTone(criticality)}>{criticality}</Badge>
-              </TableCell>
-              <TableCell align="end">
-                <span className="tabular-nums">{openIssues}</span>
+        </TableHeader>
+        <TableBody>
+          {resources.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={4}>
+                <span className="block text-center text-muted-foreground">No member resources</span>
               </TableCell>
             </TableRow>
-          ))
-        )}
-      </TableBody>
-    </Table>
+          ) : (
+            resources.map(({ id, name, type, criticality, openIssues }) => (
+              <TableRow
+                key={id}
+                highlighted={id === highlightedResourceId}
+                focusable
+                tabIndex={0}
+                onMouseEnter={() => {
+                  onResourceHover(id);
+                }}
+                onMouseLeave={() => {
+                  onResourceHover(undefined);
+                }}
+                onFocus={() => {
+                  onResourceFocus(id);
+                }}
+                onBlur={() => {
+                  onResourceFocus(undefined);
+                }}
+              >
+                <TableCell>
+                  <span className="block max-w-48 truncate" title={name}>
+                    {name}
+                  </span>
+                </TableCell>
+                <TableCell>{type}</TableCell>
+                <TableCell>
+                  <Badge variant={criticalityTone(criticality)}>{criticality}</Badge>
+                </TableCell>
+                <TableCell align="end">
+                  <span
+                    className={
+                      openIssues === 0 ? "text-muted-foreground tabular-nums" : "tabular-nums"
+                    }
+                  >
+                    {openIssues}
+                  </span>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 }

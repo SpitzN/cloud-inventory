@@ -7,6 +7,8 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
+  AlertDialogOverlay,
+  AlertDialogPortal,
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
@@ -14,11 +16,9 @@ import { Button } from "@/components/ui/button";
 
 interface DeleteApplicationProps {
   name: string;
-  /** Runs once, on "Delete", and is expected to unmount the dialog; its buttons stay disabled. */
   onDelete: () => Promise<void>;
 }
 
-/** "Delete application", which asks for confirmation naming the Application before `onDelete` runs. */
 export function DeleteApplication({ name, onDelete }: DeleteApplicationProps) {
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -27,6 +27,10 @@ export function DeleteApplication({ name, onDelete }: DeleteApplicationProps) {
       <AlertDialogTrigger render={<Button variant="destructive" className="self-start" />}>
         Delete application
       </AlertDialogTrigger>
+      {/* Base UI renders no backdrop for a dialog inside another, and the drawer is one. */}
+      <AlertDialogPortal>
+        <AlertDialogOverlay forceRender />
+      </AlertDialogPortal>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>

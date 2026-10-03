@@ -4,3 +4,4 @@ coverage
 .scratch/
 .claude/worktrees/
 .DS_Store
+.impeccable/

@@ -120,8 +120,6 @@ const columns = columnHelper.columns([
     header: "Criticality",
     sortDescFirst: true,
     filterFn: valuesFilterFn,
-    // Open issues break ties so that most critical first is the default order of Resources
-    // (compareResourcesInDefaultOrder); rows equal on both stay in name order.
     sortFn: ({ original: a }, { original: b }) => compareResourcesByCriticalityThenOpenIssues(a, b),
     cell: ({ getValue }) => <Badge variant={criticalityTone(getValue())}>{getValue()}</Badge>,
   }),
@@ -129,7 +127,11 @@ const columns = columnHelper.columns([
     header: "Open issues",
     sortDescFirst: true,
     enableColumnFilter: false,
-    cell: ({ getValue }) => <span className="tabular-nums">{getValue()}</span>,
+    cell: ({ getValue }) => (
+      <span className={getValue() === 0 ? "text-muted-foreground tabular-nums" : "tabular-nums"}>
+        {getValue()}
+      </span>
+    ),
   }),
 ]);
 
@@ -249,52 +251,54 @@ export function ResourcesTable() {
           );
         })}
       </ResourcesToolbar>
-      <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHead
-                  key={header.id}
-                  align={columnAlign(header.column.id)}
-                  aria-sort={
-                    header.column.getCanSort() ? ariaSort(header.column.getIsSorted()) : undefined
-                  }
-                >
-                  {header.column.getCanSort() ? (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="-mx-2"
-                      onClick={header.column.getToggleSortingHandler()}
-                    >
+      <div className="-mx-2">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead
+                    key={header.id}
+                    align={columnAlign(header.column.id)}
+                    aria-sort={
+                      header.column.getCanSort() ? ariaSort(header.column.getIsSorted()) : undefined
+                    }
+                  >
+                    {header.column.getCanSort() ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="-mx-2"
+                        onClick={header.column.getToggleSortingHandler()}
+                      >
+                        <table.FlexRender header={header} />
+                        <SortIndicator direction={header.column.getIsSorted()} />
+                      </Button>
+                    ) : (
                       <table.FlexRender header={header} />
-                      <SortIndicator direction={header.column.getIsSorted()} />
-                    </Button>
-                  ) : (
-                    <table.FlexRender header={header} />
-                  )}
-                </TableHead>
-              ))}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {rows.length === 0 ? (
-            <NoMatchesRow onClearFilters={clearFilters} />
-          ) : (
-            rows.map((row) => (
-              <TableRow key={row.id} data-state={row.getIsSelected() ? "selected" : undefined}>
-                {row.getAllCells().map((cell) => (
-                  <TableCell key={cell.id} align={columnAlign(cell.column.id)}>
-                    <table.FlexRender cell={cell} />
-                  </TableCell>
+                    )}
+                  </TableHead>
                 ))}
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {rows.length === 0 ? (
+              <NoMatchesRow onClearFilters={clearFilters} />
+            ) : (
+              rows.map((row) => (
+                <TableRow key={row.id} selected={row.getIsSelected()}>
+                  {row.getAllCells().map((cell) => (
+                    <TableCell key={cell.id} align={columnAlign(cell.column.id)}>
+                      <table.FlexRender cell={cell} />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }

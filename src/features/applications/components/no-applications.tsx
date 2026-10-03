@@ -8,7 +8,6 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 
-/** The Applications page with no Applications: what one is, and the ways to make one. */
 export function NoApplications() {
   return (
     <Empty>

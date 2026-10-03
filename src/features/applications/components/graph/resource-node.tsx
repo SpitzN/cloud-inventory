@@ -18,7 +18,7 @@ const criticalityDot = cva("size-2 shrink-0 rounded-full", {
 });
 
 const resourceNodeBox = cva(
-  "flex size-full items-center gap-2 rounded-lg border bg-card px-3 text-card-foreground",
+  "flex size-full items-center gap-2 rounded-lg border bg-card px-3 text-card-foreground transition",
   {
     variants: {
       highlighted: {
@@ -29,10 +29,6 @@ const resourceNodeBox = cva(
   },
 );
 
-/**
- * One Member: Criticality dot, name, Type and Provider, and the open issue count. A highlighted
- * node is outlined, for a caller linking it to another view of the same Resource.
- */
 export function ResourceNode({ data: { resource, isHighlighted } }: NodeProps<ResourceGraphNode>) {
   const { name, type, provider, criticality, openIssues } = resource;
 
@@ -52,7 +48,10 @@ export function ResourceNode({ data: { resource, isHighlighted } }: NodeProps<Re
           {type} · {provider}
         </span>
       </span>
-      <span className="tabular-nums" title={`${openIssues} open issues`}>
+      <span
+        className={openIssues === 0 ? "text-muted-foreground tabular-nums" : "tabular-nums"}
+        title={`${openIssues} open issues`}
+      >
         {openIssues}
         <span className="sr-only"> open issues</span>
       </span>

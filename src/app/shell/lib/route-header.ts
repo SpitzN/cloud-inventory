@@ -7,12 +7,15 @@ const RouteHeaderSchema = z.object({
 
 export type RouteHeaderDeclaration = z.input<typeof RouteHeaderSchema>;
 
-/**
- * The header for the matched routes, outermost first: the deepest route that declares a
- * `handle` wins, so a route without one shows its parent's header. Throws when no matched
- * route declares one, or when the deepest declaration does not parse.
- */
+function declaringMatch<Match extends { handle: unknown }>(matches: readonly Match[]) {
+  return matches.findLast(({ handle }) => handle !== undefined);
+}
+
+/** The deepest matched route that declares a header wins; throws when none does. */
 export function routeHeader(matches: readonly { handle: unknown }[]) {
-  const declared = matches.findLast(({ handle }) => handle !== undefined);
-  return RouteHeaderSchema.parse(declared?.handle);
+  return RouteHeaderSchema.parse(declaringMatch(matches)?.handle);
+}
+
+export function pageRouteId(matches: readonly { id: string; handle: unknown }[]) {
+  return declaringMatch(matches)?.id;
 }

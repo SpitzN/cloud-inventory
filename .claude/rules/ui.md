@@ -24,7 +24,7 @@ Layout per screen is in `docs/wireframes.md` and behaviour in `docs/product.md`.
 ## The hidden layer
 
 - Every icon-only control has a tooltip and an accessible name.
-- Every interactive element shows hover, focus and pressed states, rows and cards included.
+- Every interactive element shows hover and focus states, rows and cards included. Buttons also show a pressed state; cards and rows do not.
 - Anything revealed on hover is also reachable by keyboard focus.
 - Every list, table and drawer has an empty state.
 - An action whose result is not visible on screen confirms with a toast.

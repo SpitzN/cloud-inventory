@@ -4,7 +4,6 @@ import { ApplicationCard } from "@/features/applications/components/application-
 import { NoApplications } from "@/features/applications/components/no-applications";
 import { useApplicationsStore } from "@/features/applications/stores/applications";
 
-/** The saved Applications as a grid of cards, newest first, under their count and "New application". */
 export function ApplicationList() {
   const applications = useApplicationsStore((state) => state.applications);
 

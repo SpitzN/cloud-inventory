@@ -7,11 +7,6 @@ import type {
   ApplicationFormValues,
 } from "@/features/applications/schemas/application-form";
 
-/**
- * The Application an `ApplicationForm` is creating, drawn live as its graph: the typed name at
- * the centre, or "Untitled application" while it is blank, and one node per Member. With no
- * Members it says where added Resources will appear. Fills the height its parent gives it.
- */
 export function ApplicationPreview({
   control,
 }: {
@@ -23,7 +18,7 @@ export function ApplicationPreview({
 
   return (
     <section className="flex flex-col gap-2" aria-labelledby={headingId}>
-      <h2 id={headingId} className="font-medium">
+      <h2 id={headingId} className="text-sm font-semibold">
         Preview
       </h2>
       <div className="relative min-h-96 flex-1 overflow-hidden rounded-lg border">
