@@ -316,10 +316,15 @@ watchdog() {  # PID MINUTES MARKER
   kill -KILL "$pid" 2>/dev/null
 }
 
+# End a background helper and its children. The helper dies first, so it neither reports
+# nor acts on a child that was killed under it.
 kill_tree() {  # PID
   [ -n "${1:-}" ] || return 0
-  pkill -P "$1" 2>/dev/null
+  local kids
+  kids=$(pgrep -P "$1" 2>/dev/null)
   kill "$1" 2>/dev/null
+  # shellcheck disable=SC2086
+  [ -n "$kids" ] && kill $kids 2>/dev/null
   wait "$1" 2>/dev/null
   return 0
 }
@@ -357,7 +362,7 @@ run_session() {  # NN LABEL PROMPT_FILE
   update_lock claude_pid "$CLAUDE_PID"
   bash -c 'tail -n +1 -F "$1" 2>/dev/null | jq -R -r --unbuffered "fromjson? | $2"' _ "$raw" "$RENDER_JQ" >> "$logf" 2>/dev/null &
   RENDER_PID=$!
-  watchdog "$CLAUDE_PID" "$WATCHDOG_MIN" "$marker" &
+  watchdog "$CLAUDE_PID" "$WATCHDOG_MIN" "$marker" 2>/dev/null &
   WD_PID=$!
   local rc=0
   wait "$CLAUDE_PID" || rc=$?
@@ -413,7 +418,7 @@ run_check() {  # LOG
   CHECK_STATE=ok
   pnpm check > "$clog" 2>&1 &
   pid=$!
-  ( sleep 600; kill -TERM "$pid" 2>/dev/null ) &
+  ( sleep 600; kill -TERM "$pid" ) 2>/dev/null &
   killer=$!
   wait "$pid" || rc=$?
   kill_tree "$killer"
