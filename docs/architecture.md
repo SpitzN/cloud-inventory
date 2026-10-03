@@ -49,24 +49,24 @@ Rules that follow from the model:
 
 ## Stack
 
-| Concern             | Choice                                                                                                             | Decision record                                                                                       |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| Build and framework | Vite, React 19 with the React Compiler, TypeScript 6 in strict mode                                                |                                                                                                       |
-| Checks              | ESLint, Prettier, husky pre-commit hook; see [tooling.md](./tooling.md)                                            |                                                                                                       |
-| Routing             | React Router                                                                                                       |                                                                                                       |
-| Client state        | Zustand, with its persist middleware for Applications                                                              | [0001](./adr/0001-no-simulated-backend.md)                                                            |
-| Table               | TanStack Table v9, rendered with shadcn/ui table markup                                                            | [0003](./adr/0003-tanstack-table-for-the-resources-table.md)                                          |
-| Form                | React Hook Form with the Zod resolver                                                                              | [0004](./adr/0004-react-hook-form-with-zod.md)                                                        |
-| Schemas and types   | Zod 4; all domain types are schema-derived                                                                         | [0004](./adr/0004-react-hook-form-with-zod.md), [0008](./adr/0008-open-issues-is-part-of-resource.md) |
-| Styling             | Tailwind CSS                                                                                                       |                                                                                                       |
-| Components          | shadcn/ui, Base UI variants only                                                                                   | [0007](./adr/0007-shadcn-ui-on-base-ui-only.md)                                                       |
-| Icons               | lucide-react, shadcn/ui's default                                                                                  |                                                                                                       |
-| Font                | Geist, self-hosted through `@fontsource-variable/geist`, shadcn/ui's default; the visual design pass may change it |                                                                                                       |
-| Graph               | React Flow (`@xyflow/react`)                                                                                       | [0002](./adr/0002-react-flow-for-the-graph.md)                                                        |
-| Toasts              | shadcn/ui's toast component, built on Base UI                                                                      | [0007](./adr/0007-shadcn-ui-on-base-ui-only.md)                                                       |
-| Theme               | `next-themes`                                                                                                      |                                                                                                       |
-| Tests               | Vitest                                                                                                             |                                                                                                       |
-| Package manager     | pnpm                                                                                                               |                                                                                                       |
+| Concern             | Choice                                                                                                             | Decision record                                                                                                 |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| Build and framework | Vite, React 19 with the React Compiler, TypeScript 6 in strict mode                                                |                                                                                                                 |
+| Checks              | ESLint, Prettier, husky pre-commit hook; see [tooling.md](./tooling.md)                                            |                                                                                                                 |
+| Routing             | React Router                                                                                                       |                                                                                                                 |
+| Client state        | Zustand, with its persist middleware for Applications                                                              | [0001](./adr/0001-no-simulated-backend.md)                                                                      |
+| Table               | TanStack Table v9, rendered with shadcn/ui table markup                                                            | [0003](./adr/0003-tanstack-table-for-the-resources-table.md)                                                    |
+| Form                | React Hook Form with the Zod resolver                                                                              | [0004](./adr/0004-react-hook-form-with-zod.md)                                                                  |
+| Schemas and types   | Zod 4; all domain types are schema-derived                                                                         | [0004](./adr/0004-react-hook-form-with-zod.md), [0008](./adr/0008-open-issues-is-part-of-resource.md)           |
+| Styling             | Tailwind CSS                                                                                                       |                                                                                                                 |
+| Components          | shadcn/ui, Base UI variants only; a missing look is a variant added to the primitive's `cva`                       | [0007](./adr/0007-shadcn-ui-on-base-ui-only.md), [0010](./adr/0010-project-variants-in-generated-primitives.md) |
+| Icons               | lucide-react, shadcn/ui's default                                                                                  |                                                                                                                 |
+| Font                | Geist, self-hosted through `@fontsource-variable/geist`, shadcn/ui's default; the visual design pass may change it |                                                                                                                 |
+| Graph               | React Flow (`@xyflow/react`)                                                                                       | [0002](./adr/0002-react-flow-for-the-graph.md)                                                                  |
+| Toasts              | shadcn/ui's toast component, built on Base UI                                                                      | [0007](./adr/0007-shadcn-ui-on-base-ui-only.md)                                                                 |
+| Theme               | `next-themes`                                                                                                      |                                                                                                                 |
+| Tests               | Vitest                                                                                                             |                                                                                                                 |
+| Package manager     | pnpm                                                                                                               |                                                                                                                 |
 
 `next-themes` has no Next.js dependency. It is used because it already follows the system setting on the first visit and remembers the user's choice afterwards. shadcn/ui's Vite template also generates a `theme-provider.tsx` of its own; it is not used.
 
@@ -139,7 +139,7 @@ src/
                         lib/ (ring layout, saved-data resolution)
   domain/               Resource and Application schemas, dataset, Criticality rank
   components/           shared components the project writes
-    ui/                 shadcn/ui components and hooks, as generated
+    ui/                 shadcn/ui components and hooks, as generated, plus project variants
   hooks/                shared hooks
   lib/                  shared pure helpers
 ```

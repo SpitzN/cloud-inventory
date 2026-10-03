@@ -32,7 +32,7 @@ If the same fact is needed by both features, move it to `src/domain/` instead of
 A component that shows a domain term in both features, such as the Criticality badge in the Resources table, the Member table and the Resource combobox, is split in two:
 
 - the mapping from the term to a look, as a pure function in `src/domain/` (for example Criticality → badge tone, beside the Criticality rank);
-- the look, as a domain-agnostic component in `src/components/` that takes the tone as a prop.
+- the look, as a variant of the primitive with no domain meaning (for example the tone variants on `Badge`), picked by the mapping's result: `<Badge variant={criticalityTone(criticality)}>`.
 
 Each feature composes the two where it needs them. `src/components/` never imports `src/domain/`, and neither feature imports the other's badge.
 

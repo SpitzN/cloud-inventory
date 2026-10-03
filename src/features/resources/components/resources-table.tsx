@@ -1,6 +1,5 @@
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table";
 import { cn } from "cn";
-import { ToneBadge } from "@/components/tone-badge";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -42,7 +41,7 @@ const columns = columnHelper.columns([
   }),
   columnHelper.accessor("criticality", {
     header: "Criticality",
-    cell: ({ getValue }) => <ToneBadge tone={criticalityTone(getValue())}>{getValue()}</ToneBadge>,
+    cell: ({ getValue }) => <Badge variant={criticalityTone(getValue())}>{getValue()}</Badge>,
   }),
   columnHelper.accessor("openIssues", { header: "Open issues" }),
 ]);
