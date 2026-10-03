@@ -11,8 +11,7 @@ import tseslint from "typescript-eslint";
 const PALETTE =
   "red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|slate|gray|zinc|neutral|stone";
 
-const NO_REEXPORT =
-  "No re-exports: import from the file that declares the symbol.";
+const NO_REEXPORT = "No re-exports: import from the file that declares the symbol.";
 
 // A later `no-restricted-imports` entry REPLACES an earlier one for the same file,
 // so every zone rebuilds the full option object through this helper.
@@ -47,20 +46,13 @@ const noFeatures = {
 };
 const noApplications = {
   regex: "^@/features/applications/",
-  message:
-    "resources must not import from applications (applications may import from resources).",
+  message: "resources must not import from applications (applications may import from resources).",
 };
 
 export default defineConfig(
   // .scratch holds local notes and a reference copy with its own tsconfig, and .claude/worktrees
   // holds checkouts of this repository made by agents; neither is part of this project.
-  globalIgnores([
-    "dist",
-    "coverage",
-    ".scratch",
-    ".claude/worktrees",
-    "src/components/ui/**",
-  ]),
+  globalIgnores(["dist", "coverage", ".scratch", ".claude/worktrees", "src/components/ui/**"]),
 
   // eslint-disable comments are inert and reported; with --max-warnings 0 they fail the run.
   {
@@ -86,10 +78,7 @@ export default defineConfig(
     },
     rules: {
       // --- TypeScript strictness
-      "@typescript-eslint/consistent-type-assertions": [
-        "error",
-        { assertionStyle: "never" },
-      ],
+      "@typescript-eslint/consistent-type-assertions": ["error", { assertionStyle: "never" }],
       "@typescript-eslint/ban-ts-comment": [
         "error",
         {
@@ -104,14 +93,8 @@ export default defineConfig(
         "error",
         { checksVoidReturn: { attributes: false } },
       ],
-      "@typescript-eslint/restrict-template-expressions": [
-        "error",
-        { allowNumber: true },
-      ],
-      "@typescript-eslint/no-confusing-void-expression": [
-        "error",
-        { ignoreArrowShorthand: true },
-      ],
+      "@typescript-eslint/restrict-template-expressions": ["error", { allowNumber: true }],
+      "@typescript-eslint/no-confusing-void-expression": ["error", { ignoreArrowShorthand: true }],
 
       // --- Style of code
       "no-nested-ternary": "error",

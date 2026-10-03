@@ -8,11 +8,7 @@ Types are inferred from Zod schemas. The schemas follow the first `Resource` and
 
 ```ts
 export const ProviderSchema = z.enum(["AWS", "GCP", "Azure"]);
-export const EnvironmentSchema = z.enum([
-  "production",
-  "staging",
-  "development",
-]);
+export const EnvironmentSchema = z.enum(["production", "staging", "development"]);
 export const CriticalitySchema = z.enum(["low", "medium", "high", "critical"]);
 
 export const ResourceSchema = z.object({
