@@ -10,8 +10,7 @@ import type {
 /**
  * The Application an `ApplicationForm` is creating, drawn live as its graph: the typed name at
  * the centre, or "Untitled application" while it is blank, and one node per Member. With no
- * Members it says where added Resources will appear. Fills the height its parent gives it, and
- * at least 384px.
+ * Members it says where added Resources will appear. Fills the height its parent gives it.
  */
 export function ApplicationPreview({
   control,
