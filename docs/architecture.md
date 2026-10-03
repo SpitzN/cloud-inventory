@@ -123,41 +123,52 @@ Each route declares its header metadata (the title, and whether to show the back
 
 ## Code layout
 
-Code is organised by feature, not by file type.
+Code is organised in layers, by feature inside the middle one ([ADR 0009](./adr/0009-feature-slices-with-enforced-boundaries.md)). Lint enforces the direction; `.claude/rules/structure.md` says where a new file goes.
 
 ```
 src/
-  app/                  router, shell (sidebar and header), theme
-  components/ui/        shadcn/ui components and hooks, as generated
+  main.tsx              entry; imported by nothing
+  app/                  app.tsx (providers, router), shell/ (sidebar, header, theme,
+                        error screen, route header), routes/ (one thin page per route)
   features/
-    resources/          schema, dataset, table columns, toolbar and filters,
-                        address parsing, Criticality rank, Selection store, page
-    applications/       schema, store, cards page, drawer,
-                        creation page, form, Resource combobox
-      graph/            graph component, the two node components, ring layout
-  lib/                  shared helpers
+    resources/          components/ (table, toolbar, filters), stores/ (Selection),
+                        schemas/ and lib/ (address codec)
+    applications/       components/ (cards, drawer, form, Resource combobox, graph/),
+                        hooks/, stores/ (Applications), schemas/ (form),
+                        lib/ (ring layout, saved-data resolution)
+  domain/               Resource and Application schemas, dataset, Criticality rank
+  components/           shared components the project writes
+    ui/                 shadcn/ui components and hooks, as generated
+  hooks/                shared hooks
+  lib/                  shared pure helpers
 ```
 
-Test files sit beside the code they test.
+```
+main  →  app  →  features  →  domain  →  lib
+                    ↓
+          components, hooks  →  lib, components/ui
+```
+
+Features never import each other: a route under `src/app/routes/` composes them. Test files sit beside the code they test.
 
 ## Units and their boundaries
 
-| Unit                             | What it does                                                                                           | Depends on                                       |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------ |
-| Resource and Application schemas | Define the domain types and enum option lists                                                          | Zod                                              |
-| Dataset module                   | Exports the twelve Resources, a lookup by id, and the example Application                              | The schemas                                      |
-| Criticality rank                 | A rank and a comparator                                                                                | Criticality schema                               |
-| Address codec                    | Parses the query string into table state and serialises table state back                               | Zod, the enum schemas                            |
-| Selection store                  | Holds the ticked Resource ids; toggle, set many, clear                                                 | Zustand                                          |
-| Applications store               | Holds Applications; create, remove; saving                                                             | Zustand, saved-data resolution                   |
-| Saved-data resolution            | A pure function from whatever is saved to the starting list of Applications                            | Application schema, dataset                      |
-| Resources table                  | Columns, controlled TanStack Table instance, table markup                                              | TanStack Table, address codec, Selection store   |
-| Resources toolbar                | Search, the three filters, counts, the Create button                                                   | Address codec, Selection store                   |
-| `ApplicationForm`                | Name, description and Members fields; validation; submit and cancel                                    | React Hook Form, form schema, `ResourceCombobox` |
-| `ResourceCombobox`               | A controlled chip combobox: a list of ids in, a list of ids out                                        | shadcn/ui Combobox, dataset                      |
-| `ApplicationGraph`               | Draws a name and a list of Resources as a hub-and-spoke graph; can highlight one node and report hover | React Flow, ring layout                          |
-| Ring layout                      | A pure function from a node count to positions                                                         | Nothing                                          |
-| Application drawer               | Shows one Application: graph, Members, delete                                                          | Applications store, `ApplicationGraph`           |
+| Unit                             | Home                                                | What it does                                                                                           | Depends on                                       |
+| -------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------ |
+| Resource and Application schemas | `domain/`                                           | Define the domain types and enum option lists                                                          | Zod                                              |
+| Dataset module                   | `domain/`                                           | Exports the twelve Resources, a lookup by id, and the example Application                              | The schemas                                      |
+| Criticality rank                 | `domain/`                                           | A rank and a comparator                                                                                | Criticality schema                               |
+| Address codec                    | `features/resources/lib/`, its schema in `schemas/` | Parses the query string into table state and serialises table state back                               | Zod, the enum schemas                            |
+| Selection store                  | `features/resources/stores/`                        | Holds the ticked Resource ids; toggle, set many, clear                                                 | Zustand                                          |
+| Applications store               | `features/applications/stores/`                     | Holds Applications; create, remove; saving                                                             | Zustand, saved-data resolution                   |
+| Saved-data resolution            | `features/applications/lib/`                        | A pure function from whatever is saved to the starting list of Applications                            | Application schema, dataset                      |
+| Resources table                  | `features/resources/components/`                    | Columns, controlled TanStack Table instance, table markup                                              | TanStack Table, address codec, Selection store   |
+| Resources toolbar                | `features/resources/components/`                    | Search, the three filters, counts, the Create button                                                   | Address codec, Selection store                   |
+| `ApplicationForm`                | `features/applications/components/`                 | Name, description and Members fields; validation; submit and cancel                                    | React Hook Form, form schema, `ResourceCombobox` |
+| `ResourceCombobox`               | `features/applications/components/`                 | A controlled chip combobox: a list of ids in, a list of ids out                                        | shadcn/ui Combobox, dataset                      |
+| `ApplicationGraph`               | `features/applications/components/graph/`           | Draws a name and a list of Resources as a hub-and-spoke graph; can highlight one node and report hover | React Flow, ring layout                          |
+| Ring layout                      | `features/applications/lib/`                        | A pure function from a node count to positions                                                         | Nothing                                          |
+| Application drawer               | `features/applications/components/`                 | Shows one Application: graph, Members, delete                                                          | Applications store, `ApplicationGraph`           |
 
 Three of these are deliberately ignorant of their surroundings:
 
@@ -185,9 +196,9 @@ The static dataset is typed by annotation, not parsed at runtime. One test runs 
 
 **Create.**
 
-1. The New application page reads the Selection and seeds the form's Members from it.
+1. The New application route reads the Selection and passes its ids to the form as the starting Members.
 2. On submit, the Applications store adds the Application to the front of the list.
-3. The Selection store clears.
+3. The route's create handler clears the Selection store.
 4. The router goes to `/applications`, replacing the history entry.
 5. A toast confirms.
 
