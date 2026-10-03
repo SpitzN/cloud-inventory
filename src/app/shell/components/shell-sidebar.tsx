@@ -12,8 +12,11 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { resources } from "@/domain/dataset";
+import { useApplicationsStore } from "@/features/applications/stores/applications";
 
 export function ShellSidebar() {
+  const applicationCount = useApplicationsStore((state) => state.applications.length);
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
@@ -31,7 +34,12 @@ export function ShellSidebar() {
               icon={<ServerIcon />}
               count={resources.length}
             />
-            <SectionItem to="/applications" label="Applications" icon={<BoxesIcon />} />
+            <SectionItem
+              to="/applications"
+              label="Applications"
+              icon={<BoxesIcon />}
+              count={applicationCount}
+            />
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
