@@ -132,7 +132,7 @@ src/
                         error screen, route header), routes/ (one thin page per route)
   features/
     resources/          components/ (table, toolbar, filters), stores/ (Selection),
-                        lib/ (address codec)
+                        schemas/ and lib/ (address codec)
     applications/       components/ (cards, drawer, form, Resource combobox, graph/),
                         hooks/, stores/ (Applications), schemas/ (form),
                         lib/ (ring layout, saved-data resolution)
@@ -153,22 +153,22 @@ Features never import each other: a route under `src/app/routes/` composes them.
 
 ## Units and their boundaries
 
-| Unit                             | Home                                      | What it does                                                                                           | Depends on                                       |
-| -------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------ |
-| Resource and Application schemas | `domain/`                                 | Define the domain types and enum option lists                                                          | Zod                                              |
-| Dataset module                   | `domain/`                                 | Exports the twelve Resources, a lookup by id, and the example Application                              | The schemas                                      |
-| Criticality rank                 | `domain/`                                 | A rank and a comparator                                                                                | Criticality schema                               |
-| Address codec                    | `features/resources/lib/`                 | Parses the query string into table state and serialises table state back                               | Zod, the enum schemas                            |
-| Selection store                  | `features/resources/stores/`              | Holds the ticked Resource ids; toggle, set many, clear                                                 | Zustand                                          |
-| Applications store               | `features/applications/stores/`           | Holds Applications; create, remove; saving                                                             | Zustand, saved-data resolution                   |
-| Saved-data resolution            | `features/applications/lib/`              | A pure function from whatever is saved to the starting list of Applications                            | Application schema, dataset                      |
-| Resources table                  | `features/resources/components/`          | Columns, controlled TanStack Table instance, table markup                                              | TanStack Table, address codec, Selection store   |
-| Resources toolbar                | `features/resources/components/`          | Search, the three filters, counts, the Create button                                                   | Address codec, Selection store                   |
-| `ApplicationForm`                | `features/applications/components/`       | Name, description and Members fields; validation; submit and cancel                                    | React Hook Form, form schema, `ResourceCombobox` |
-| `ResourceCombobox`               | `features/applications/components/`       | A controlled chip combobox: a list of ids in, a list of ids out                                        | shadcn/ui Combobox, dataset                      |
-| `ApplicationGraph`               | `features/applications/components/graph/` | Draws a name and a list of Resources as a hub-and-spoke graph; can highlight one node and report hover | React Flow, ring layout                          |
-| Ring layout                      | `features/applications/lib/`              | A pure function from a node count to positions                                                         | Nothing                                          |
-| Application drawer               | `features/applications/components/`       | Shows one Application: graph, Members, delete                                                          | Applications store, `ApplicationGraph`           |
+| Unit                             | Home                                                | What it does                                                                                           | Depends on                                       |
+| -------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------ |
+| Resource and Application schemas | `domain/`                                           | Define the domain types and enum option lists                                                          | Zod                                              |
+| Dataset module                   | `domain/`                                           | Exports the twelve Resources, a lookup by id, and the example Application                              | The schemas                                      |
+| Criticality rank                 | `domain/`                                           | A rank and a comparator                                                                                | Criticality schema                               |
+| Address codec                    | `features/resources/lib/`, its schema in `schemas/` | Parses the query string into table state and serialises table state back                               | Zod, the enum schemas                            |
+| Selection store                  | `features/resources/stores/`                        | Holds the ticked Resource ids; toggle, set many, clear                                                 | Zustand                                          |
+| Applications store               | `features/applications/stores/`                     | Holds Applications; create, remove; saving                                                             | Zustand, saved-data resolution                   |
+| Saved-data resolution            | `features/applications/lib/`                        | A pure function from whatever is saved to the starting list of Applications                            | Application schema, dataset                      |
+| Resources table                  | `features/resources/components/`                    | Columns, controlled TanStack Table instance, table markup                                              | TanStack Table, address codec, Selection store   |
+| Resources toolbar                | `features/resources/components/`                    | Search, the three filters, counts, the Create button                                                   | Address codec, Selection store                   |
+| `ApplicationForm`                | `features/applications/components/`                 | Name, description and Members fields; validation; submit and cancel                                    | React Hook Form, form schema, `ResourceCombobox` |
+| `ResourceCombobox`               | `features/applications/components/`                 | A controlled chip combobox: a list of ids in, a list of ids out                                        | shadcn/ui Combobox, dataset                      |
+| `ApplicationGraph`               | `features/applications/components/graph/`           | Draws a name and a list of Resources as a hub-and-spoke graph; can highlight one node and report hover | React Flow, ring layout                          |
+| Ring layout                      | `features/applications/lib/`                        | A pure function from a node count to positions                                                         | Nothing                                          |
+| Application drawer               | `features/applications/components/`                 | Shows one Application: graph, Members, delete                                                          | Applications store, `ApplicationGraph`           |
 
 Three of these are deliberately ignorant of their surroundings:
 

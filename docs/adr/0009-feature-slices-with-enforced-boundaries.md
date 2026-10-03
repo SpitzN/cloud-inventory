@@ -13,6 +13,7 @@ Four choices were made, each against an alternative:
 
 - Two dev dependencies: `eslint-plugin-boundaries` and `eslint-import-resolver-typescript`, which lets it follow the `@/` alias.
 - A cross-feature need is met by a route passing state in, or by moving a fact to `src/domain/`; never by an import between features.
+- A component that shows a domain term in both features is split: the mapping in `src/domain/`, the look as a domain-agnostic component in `src/components/`, composed by each feature. `.claude/rules/structure.md` has the details.
 - A route whose page would only render one feature component mounts that component directly in the router definition, with no page file, since a page that only forwards breaks "every layer transforms".
 - Lint checks folders, not file names: the nesting depth inside `components/` and the `use-*` name of a hook are review rules in `.claude/rules/structure.md`.
 - The layer table and the traps met while configuring the plugin are in [tooling.md](../tooling.md).

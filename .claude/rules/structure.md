@@ -27,6 +27,15 @@ A feature never imports another, not even a type. When a screen needs two featur
 
 If the same fact is needed by both features, move it to `src/domain/` instead of passing it through every route.
 
+## A domain term both features show
+
+A component that shows a domain term in both features, such as the Criticality badge in the Resources table, the Member table and the Resource combobox, is split in two:
+
+- the mapping from the term to a look, as a pure function in `src/domain/` (for example Criticality → badge tone, beside the Criticality rank);
+- the look, as a domain-agnostic component in `src/components/` that takes the tone as a prop.
+
+Each feature composes the two where it needs them. `src/components/` never imports `src/domain/`, and neither feature imports the other's badge.
+
 ## Routes
 
 A file in `src/app/routes/` arranges feature components and connects them. It holds no business logic and no private sub-components; those belong in a feature. A route whose page would only render one feature component mounts that component directly in the router definition, with no page file.
