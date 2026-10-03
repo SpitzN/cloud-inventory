@@ -30,7 +30,7 @@ There is no lint-staged and no CI workflow. The hook runs exactly what a develop
 | Prettier's options are written out, at 100 columns                                                      | The file states every option the code relies on, so a Prettier major cannot restyle it. `proseWrap: "preserve"` keeps Markdown prose as written; tables are still aligned and fenced code is still formatted.                               |
 | `prettier-plugin-tailwindcss`                                                                           | Class order is formatting. The plugin sorts classes in `className`, `cn()` and `cva()`.                                                                                                                                                     |
 | A lean plugin set                                                                                       | typescript-eslint, React hooks, React refresh, accessibility, Tailwind and `@shadcn/lint`. Large opinionated packs are left out; each of their rules would need defending.                                                                  |
-| `@shadcn/lint`, with two of its six rules                                                               | `no-restyle` and `require-static-classes` refuse a `className` that restyles a `src/components/ui/` primitive, which nothing else checked. Three rules repeat active `better-tailwindcss` rules and stay off, as does `no-inline-styles`.   |
+| `@shadcn/lint`, with two of its six rules                                                               | `no-restyle` and `require-static-classes` refuse a `className` that restyles a `src/components/ui/` primitive. Three others check classes `better-tailwindcss` already checks, and `no-inline-styles` is left to review; all four are off.  |
 | `@shadcn/lint` 0.2.0 on ESLint 10                                                                       | Built against ESLint 9: it depends on `@eslint/core` 0.17, though only for types. It ran correctly on 10 across every sample, and `pnpm peers check` reports nothing new.                                                                   |
 | Disable comments are inert                                                                              | `noInlineConfig` is on, so a rule cannot be switched off from inside a file. A failing rule is fixed in the code.                                                                                                                           |
 | `src/components/ui/` is ignored by ESLint only                                                          | shadcn/ui files stay as generated. Prettier and the compiler still cover them, so `pnpm format` is run after adding a component.                                                                                                            |
@@ -91,13 +91,19 @@ Two of the Tailwind bans are blunt:
 - The arbitrary-value ban also rejects structural values such as `grid-cols-[auto_1fr]`. Add a theme token or utility instead.
 - The text-size ban matches class names, so a custom text-size token above 24px would pass.
 
+`@shadcn/lint` as configured leaves three gaps:
+
+- The layout allowance covers height, size and transforms as well as margin and width, so `h-12` on a `Button` passes although its `size` sets the height.
+- Only `className` is checked. A look set through the `style` prop passes; the plugin's `no-inline-styles` would check it.
+- A raw colour in an SVG attribute, such as `fill="#f00"`, passes. The plugin's `no-raw-colors` would check it, but its class check repeats the palette ban.
+
 ## Traps found while verifying
 
 - **Three preset options reject ordinary React code** and are relaxed on purpose: a promise-returning handler passed to a JSX attribute, a number inside a template literal, and an arrow function returning a `void` call.
 - **Export lists fail.** `export { a, b }` is rejected along with re-exports; write `export const`, `export function`, `export type` or `export interface` at the declaration.
 - **Callbacks nest quickly inside a store definition.** A callback inside an updater inside a store creator is already three deep. Hoist the inner helper to a module function.
 - **Angle-bracket assertions fail in the compiler too**, through `erasableSyntaxOnly`.
-- **A wrapper cannot restyle a primitive either.** Classes a wrapper adds to a primitive, and classes passed to a wrapper that forwards `className`, are checked as if written on the primitive. Margin and width pass; colour, type size, padding and shape fail. Plain elements are not checked.
+- **A primitive takes layout classes only.** Margin, width, height, display and position pass. Colour, padding, gap, shape, effects, motion and typography fail, `truncate` and `tabular-nums` included: put those on a plain element inside the primitive. Plain elements are not checked.
+- **A wrapper cannot restyle a primitive either.** Classes a wrapper adds to a primitive, and classes passed to a wrapper that forwards `className`, are checked as if written on the primitive. The wrapper takes `className` in its signature; destructured in the body, it is reported as unreadable.
 - **A class picked by key fails on a primitive.** `className={WIDTH[size]}` is reported as unreadable even when every value is a string in the same file. A ternary, a same-file constant or `cn(wide && "w-48")` passes.
 - **The plugin's messages offer a new variant in the primitive's file.** The `note` setting appends that `src/components/ui/` stays as generated.
-- **`no-inline-styles` duplicates nothing and is still off.** Its sanctioned form for a measured value, a custom property on `style`, is written with a type assertion, which lint bans.

@@ -211,14 +211,14 @@ export default defineConfig(
 
   // --- shadcn/ui primitives: a caller's className places one and leaves its look alone.
   // The plugin's colour, arbitrary-value and unknown-class rules stay off: the block above
-  // already enforces those conventions.
+  // already checks those classes.
   {
     files: ["src/**/*.{ts,tsx}"],
     plugins: { shadcn },
     settings: {
       shadcn: {
         // Appended to every finding: the built-in text offers a new variant in the primitive's file.
-        note: "src/components/ui/ stays as generated: do not add a variant or size there.",
+        note: "In this project src/components/ui/ stays as generated: do not add a variant or size there.",
       },
     },
     rules: {
