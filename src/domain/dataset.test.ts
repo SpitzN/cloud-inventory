@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { ApplicationSchema } from "@/domain/application";
 import { resourceById, resources } from "@/domain/dataset";
+import { exampleApplication } from "@/domain/example-application";
 import { ResourceSchema } from "@/domain/resource";
 
 describe("the dataset", () => {
@@ -20,5 +22,14 @@ describe("the dataset", () => {
   it("finds a Resource by its id, and nothing for an unknown id", () => {
     expect(resourceById("r-005")?.name).toBe("ci-deploy-role");
     expect(resourceById("r-999")).toBeUndefined();
+  });
+
+  it("holds an example Application that passes its schema and whose Members all exist", () => {
+    expect(ApplicationSchema.parse(exampleApplication)).toEqual(exampleApplication);
+    expect(exampleApplication.resourceIds).toEqual(["r-006", "r-007", "r-008", "r-009", "r-005"]);
+
+    for (const id of exampleApplication.resourceIds) {
+      expect(resourceById(id)).toBeDefined();
+    }
   });
 });

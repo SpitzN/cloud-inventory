@@ -1,9 +1,10 @@
 import { Outlet } from "react-router";
+import { ApplicationList } from "@/features/applications/components/application-list";
 
 export function ApplicationsPage() {
   return (
     <>
-      <p className="text-sm text-muted-foreground">The saved Applications will be here.</p>
+      <ApplicationList />
       <Outlet />
     </>
   );
