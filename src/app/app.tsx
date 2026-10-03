@@ -3,11 +3,11 @@ import { createBrowserRouter, Navigate, RouterProvider } from "react-router";
 import { ApplicationsPage } from "@/app/routes/applications";
 import { NewApplicationPage } from "@/app/routes/new-application";
 import { NotFoundPage } from "@/app/routes/not-found";
-import { ResourcesPage } from "@/app/routes/resources";
 import { ErrorScreen } from "@/app/shell/components/error-screen";
 import { Shell } from "@/app/shell/components/shell";
 import type { RouteHeaderDeclaration } from "@/app/shell/lib/route-header";
 import { ApplicationDrawer } from "@/features/applications/components/application-drawer";
+import { ResourcesTable } from "@/features/resources/components/resources-table";
 
 const router = createBrowserRouter([
   { path: "/", element: <Navigate to="/resources" replace /> },
@@ -23,14 +23,13 @@ const router = createBrowserRouter([
         children: [
           {
             path: "resources",
-            element: <ResourcesPage />,
+            element: <ResourcesTable />,
             handle: { title: "Resources" } satisfies RouteHeaderDeclaration,
           },
           {
             path: "applications",
             element: <ApplicationsPage />,
             handle: { title: "Applications" } satisfies RouteHeaderDeclaration,
-            // No handle: the drawer keeps the Applications header.
             children: [{ path: ":id", element: <ApplicationDrawer /> }],
           },
           {

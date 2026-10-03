@@ -1,4 +1,5 @@
 import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 
 function Table({ className, ...props }: React.ComponentProps<"table">) {
@@ -50,26 +51,50 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
   );
 }
 
-function TableHead({ className, ...props }: React.ComponentProps<"th">) {
+const tableHeadVariants = cva(
+  "h-10 px-2 align-middle font-medium whitespace-nowrap text-foreground [&:has([role=checkbox])]:pr-0",
+  {
+    variants: {
+      align: {
+        start: "text-left",
+        end: "text-right",
+      },
+    },
+    defaultVariants: {
+      align: "start",
+    },
+  },
+);
+
+function TableHead({
+  className,
+  align,
+  ...props
+}: Omit<React.ComponentProps<"th">, "align"> & VariantProps<typeof tableHeadVariants>) {
   return (
-    <th
-      data-slot="table-head"
-      className={cn(
-        "h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&:has([role=checkbox])]:pr-0",
-        className,
-      )}
-      {...props}
-    />
+    <th data-slot="table-head" className={cn(tableHeadVariants({ align }), className)} {...props} />
   );
 }
 
-function TableCell({ className, ...props }: React.ComponentProps<"td">) {
+const tableCellVariants = cva("p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0", {
+  variants: {
+    align: {
+      start: "",
+      end: "text-right",
+    },
+  },
+  defaultVariants: {
+    align: "start",
+  },
+});
+
+function TableCell({
+  className,
+  align,
+  ...props
+}: Omit<React.ComponentProps<"td">, "align"> & VariantProps<typeof tableCellVariants>) {
   return (
-    <td
-      data-slot="table-cell"
-      className={cn("p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0", className)}
-      {...props}
-    />
+    <td data-slot="table-cell" className={cn(tableCellVariants({ align }), className)} {...props} />
   );
 }
 

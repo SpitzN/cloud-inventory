@@ -325,8 +325,8 @@ export default defineConfig(
     plugins: { shadcn },
     settings: {
       shadcn: {
-        // Appended to every finding: the built-in text offers a new variant in the primitive's file.
-        note: "In this project src/components/ui/ stays as generated: do not add a variant or size there.",
+        // Appended to every finding, after the built-in text that offers a new variant in the primitive's file.
+        note: "In this project a new look is a variant added to the primitive's cva in src/components/ui/, never classes on className.",
       },
     },
     rules: {
@@ -334,12 +334,6 @@ export default defineConfig(
         "error",
         {
           allow: ["layout"],
-          // The owner's two exceptions: a table cell truncates and aligns its figures, and a
-          // badge takes its colour from a theme token (the Criticality badge).
-          contracts: [
-            { pattern: "^Table(Cell|Head)$", allow: ["layout", "typography"] },
-            { pattern: "^Badge$", allow: ["layout", "color"] },
-          ],
         },
       ],
       // no-restyle judges only the classes it can read; this reports the ones it cannot.

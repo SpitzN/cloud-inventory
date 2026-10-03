@@ -27,7 +27,7 @@ Read these before writing or changing code under `src/`:
 - `pnpm check` (typecheck, lint, format check, tests) passes before work is called done.
 - A failing check is fixed in the code. The TypeScript, ESLint and Prettier configurations stay as they are, and every commit goes through the pre-commit hook.
 - A new dependency needs the owner's approval first.
-- `src/components/ui/` holds what the shadcn CLI generates, hooks included, and those files stay exactly as generated. Everything outside it is project code and passes every check.
+- `src/components/ui/` holds what the shadcn CLI generates, hooks included, and those files stay as generated, apart from variants the project adds to a component's `cva` ([ADR 0010](docs/adr/0010-project-variants-in-generated-primitives.md)). Re-running `shadcn add --overwrite` on such a file drops those variants, so they are added again. Everything outside it is project code and passes every check.
 - Build screens from the components already in `src/components/ui/`. They are shadcn/ui's Base UI variants, the only kind this project uses, never Radix or React Aria ([ADR 0007](docs/adr/0007-shadcn-ui-on-base-ui-only.md)). The owner adds components: when one is missing, stop and ask.
 
 ## Agent skills

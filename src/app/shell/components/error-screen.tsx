@@ -8,7 +8,6 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 
-/** Shown in place of the page content when the page throws while rendering. */
 export function ErrorScreen() {
   return (
     <Empty>

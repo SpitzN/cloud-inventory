@@ -21,6 +21,10 @@
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
+  --color-tone-neutral: var(--tone-neutral);
+  --color-tone-caution: var(--tone-caution);
+  --color-tone-warning: var(--tone-warning);
+  --color-tone-danger: var(--tone-danger);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -81,6 +85,11 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  /* The four criticality tokens, one per tone: the only data-driven colours. */
+  --tone-neutral: oklch(0.5 0.05 255);
+  --tone-caution: oklch(0.55 0.12 85);
+  --tone-warning: oklch(0.58 0.17 50);
+  --tone-danger: oklch(0.577 0.245 27.325);
 }
 
 .dark {
@@ -115,6 +124,10 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  --tone-neutral: oklch(0.75 0.05 255);
+  --tone-caution: oklch(0.83 0.14 85);
+  --tone-warning: oklch(0.76 0.16 55);
+  --tone-danger: oklch(0.704 0.191 22.216);
 }
 
 @layer base {
