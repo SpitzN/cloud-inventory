@@ -1,7 +1,7 @@
 import { Outlet } from "react-router";
-import { ShellHeader } from "@/app/shell/shell-header";
-import { ShellSidebar } from "@/app/shell/shell-sidebar";
-import { useSidebarOpen } from "@/app/shell/use-sidebar-open";
+import { ShellHeader } from "@/app/shell/components/shell-header";
+import { ShellSidebar } from "@/app/shell/components/shell-sidebar";
+import { useSidebarOpen } from "@/app/shell/hooks/use-sidebar-open";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/toast";
 
