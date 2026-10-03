@@ -44,4 +44,4 @@ Single-context: `GLOSSARY.md` at the repo root and ADRs in `docs/adr/`. See `doc
 
 ### Ralph loop
 
-`/ralph afk <n>` implements the next `<n>` ready tickets unattended, one session per ticket; `/ralph dry-run` shows the order. See `.claude/skills/ralph/SKILL.md`.
+`/ralph afk <n>` implements the next `<n>` ready tickets unattended, with one session, one branch and one pull request per ticket; `/ralph dry-run` shows the order. See `.claude/skills/ralph/SKILL.md`.
