@@ -1,6 +1,6 @@
 import { ChevronLeftIcon } from "lucide-react";
 import { useMatches } from "react-router";
-import { IconControl } from "@/app/shell/components/icon-control";
+import { IconControl } from "@/components/icon-control";
 import { ThemeSwitch } from "@/app/shell/components/theme-switch";
 import { routeHeader } from "@/app/shell/lib/route-header";
 import { Button } from "@/components/ui/button";
