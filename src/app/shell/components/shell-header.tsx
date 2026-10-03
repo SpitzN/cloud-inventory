@@ -5,7 +5,7 @@ import { ThemeSwitch } from "@/app/shell/components/theme-switch";
 import { routeHeader } from "@/app/shell/lib/route-header";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { useLeaveNewApplication } from "@/features/applications/hooks/use-leave-new-application";
+import { useGoBack } from "@/hooks/use-go-back";
 
 /** Also sets the document title. */
 export function ShellHeader() {
@@ -16,7 +16,7 @@ export function ShellHeader() {
       <title>{`${title} · Cloud Inventory`}</title>
       <IconControl label="Toggle sidebar" render={<SidebarTrigger />} />
       {backChevron && <BackChevron />}
-      <h1 className="text-sm font-medium">{title}</h1>
+      <h1 className="text-base font-semibold">{title}</h1>
       <div className="ml-auto">
         <ThemeSwitch />
       </div>
@@ -25,10 +25,13 @@ export function ShellHeader() {
 }
 
 function BackChevron() {
-  const leave = useLeaveNewApplication();
+  const goBack = useGoBack("/applications");
 
   return (
-    <IconControl label="Back" render={<Button variant="ghost" size="icon-sm" onClick={leave} />}>
+    <IconControl
+      label="Back"
+      render={<Button variant="ghost" size="icon-sm" onClick={() => void goBack()} />}
+    >
       <ChevronLeftIcon />
     </IconControl>
   );

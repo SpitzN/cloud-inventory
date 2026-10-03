@@ -10,14 +10,9 @@ import {
 
 interface ValueFilterOption {
   value: string;
-  /** The rows this value would show, given the search and the other filters. */
   count: number;
 }
 
-/**
- * A dropdown of values to tick, each with its count. The button shows the ticked values, and a
- * change hands over every ticked value in the order of the options.
- */
 export function ValueFilter({
   title,
   options,

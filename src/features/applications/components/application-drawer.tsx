@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router";
+import { useEffect, useState } from "react";
+import { useMatch, useNavigate } from "react-router";
 import { XIcon } from "lucide-react";
 import { IconControl } from "@/components/icon-control";
 import { Button } from "@/components/ui/button";
@@ -12,51 +12,47 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { toast } from "@/components/ui/toast";
+import type { Application } from "@/domain/application";
 import { resourcesInDefaultOrder } from "@/domain/resource-order";
 import { DeleteApplication } from "@/features/applications/components/delete-application";
 import { ApplicationGraph } from "@/features/applications/components/graph/application-graph";
 import { MemberTable } from "@/features/applications/components/member-table";
 import { useApplicationsStore } from "@/features/applications/stores/applications";
+import { useGoBack } from "@/hooks/use-go-back";
 
-/**
- * The Application named by the route's `:id`, in a modal drawer over the Applications page.
- * Closing goes to `/applications`, and so does deleting, which then removes the Application and
- * says so in a toast. An id with no Application goes there too, replacing the history entry, and
- * says so in a toast.
- */
 export function ApplicationDrawer() {
-  const { id } = useParams();
+  const id = useMatch("/applications/:id")?.params.id;
   const navigate = useNavigate();
-  // React Router keys the first location of a visit "default", including when Back returns to it.
-  const openedDirectly = useLocation().key === "default";
+  const goBack = useGoBack("/applications");
   const application = useApplicationsStore((state) =>
-    state.applications.find((candidate) => candidate.id === id),
+    state.applications.find((saved) => saved.id === id),
   );
   const remove = useApplicationsStore((state) => state.remove);
-  const isMissing = application === undefined;
-  const isDeleting = useRef(false);
-  // Kept apart so that the pointer leaving a row or node falls back to the focused row, which
-  // counts as hovered.
-  const [hoveredResourceId, setHoveredResourceId] = useState<string>();
-  const [focusedResourceId, setFocusedResourceId] = useState<string>();
+  // Kept while the drawer slides out, also after a delete, and forgotten once it has shut.
+  const [shown, setShown] = useState<Application>();
+  const isMissing = id !== undefined && application === undefined && id !== shown?.id;
+  // Base UI does not animate a drawer that mounts open, so it is held closed for one frame.
+  const [hasPainted, setHasPainted] = useState(false);
 
-  // Opened from a card, the previous entry is the Applications page: going back to it keeps Back
-  // from reopening the drawer.
-  const leave = async () => {
-    if (openedDirectly) {
-      await navigate("/applications", { replace: true });
-      return;
-    }
-    await navigate(-1);
-  };
+  if (application !== undefined && application !== shown) {
+    setShown(application);
+  }
 
   useEffect(() => {
-    if (!isMissing || isDeleting.current) {
+    const frame = requestAnimationFrame(() => {
+      setHasPainted(true);
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isMissing) {
       return;
     }
-    // On a first load this effect runs before the shell's toaster has subscribed, and a toast added
-    // then is lost; the toaster is subscribed once the navigation has settled. A fixed id makes
-    // Strict Mode's second run update this toast instead of adding another.
+    // Added after navigating: on a first load the toaster subscribes only then. The fixed id stops
+    // Strict Mode's second run from adding a second toast.
     const reportNotFound = async () => {
       await navigate("/applications", { replace: true });
       toast.add({ id: "application-not-found", title: "Application not found" });
@@ -64,80 +60,106 @@ export function ApplicationDrawer() {
     void reportNotFound();
   }, [isMissing, navigate]);
 
-  if (isMissing) {
-    return null;
-  }
-
-  const { name, description, resourceIds } = application;
-  // Members are filtered to known Resources when the Applications are loaded.
-  const highlightedResourceId = hoveredResourceId ?? focusedResourceId;
-  const members = resourcesInDefaultOrder(resourceIds);
-
+  // The drawer itself stays mounted, so that every open is a change from closed and slides in.
   return (
     <Drawer
-      open
+      open={hasPainted && application !== undefined}
       swipeDirection="right"
       onOpenChange={(open) => {
         if (open) {
           return;
         }
-        void leave();
+        void goBack();
+      }}
+      onOpenChangeComplete={(open) => {
+        if (open) {
+          return;
+        }
+        setShown(undefined);
       }}
     >
-      <DrawerContent variant="floating" className="w-11/20 min-w-140">
-        <DrawerHeader className="mb-4">
-          <div className="flex items-center gap-2">
-            <DrawerTitle className="min-w-0 flex-1">
-              <span className="block truncate" title={name}>
-                {name}
-              </span>
-            </DrawerTitle>
-            <IconControl
-              label="Close"
-              render={<DrawerClose render={<Button variant="ghost" size="icon-sm" />} />}
-            >
-              <XIcon />
-            </IconControl>
-          </div>
-          {description !== undefined && <DrawerDescription>{description}</DrawerDescription>}
-        </DrawerHeader>
-        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4">
-          {/* Dragging the graph pans it; without this, a drag to the right would swipe the drawer shut. */}
-          <div
-            data-base-ui-swipe-ignore
-            className="h-96 shrink-0 overflow-hidden rounded-lg border"
-          >
-            <ApplicationGraph
-              name={name}
-              resources={members}
-              highlightedResourceId={highlightedResourceId}
-              onResourceHover={setHoveredResourceId}
-            />
-          </div>
-          <section className="flex flex-col gap-2" aria-labelledby="member-resources">
-            <h3 id="member-resources" className="font-medium">
-              Member resources · <span className="tabular-nums">{members.length}</span>
-            </h3>
-            <MemberTable
-              resources={members}
-              highlightedResourceId={highlightedResourceId}
-              onResourceHover={setHoveredResourceId}
-              onResourceFocus={setFocusedResourceId}
-            />
-          </section>
-          <DeleteApplication
-            name={name}
-            onDelete={async () => {
-              // A navigation settles before React renders its route, so the drawer can still be
-              // mounted when the Application is removed; it must not report it as not found.
-              isDeleting.current = true;
-              await leave();
-              remove(application.id);
-              toast.add({ title: "Application deleted", description: name });
-            }}
-          />
-        </div>
-      </DrawerContent>
+      {shown !== undefined && (
+        <DrawerPanel
+          application={shown}
+          onDelete={async () => {
+            remove(shown.id);
+            toast.add({ title: "Application deleted", description: shown.name });
+            await goBack();
+          }}
+        />
+      )}
     </Drawer>
+  );
+}
+
+function DrawerPanel({
+  application,
+  onDelete,
+}: {
+  application: Application;
+  onDelete: () => Promise<void>;
+}) {
+  const { id, name, description } = application;
+
+  return (
+    <DrawerContent variant="floating" className="w-11/20 min-w-140">
+      <DrawerHeader className="mb-4">
+        <div className="flex items-center gap-2">
+          <DrawerTitle size="large" className="min-w-0 flex-1">
+            <span className="block truncate" title={name}>
+              {name}
+            </span>
+          </DrawerTitle>
+          <IconControl
+            label="Close"
+            render={<DrawerClose render={<Button variant="ghost" size="icon-sm" />} />}
+          >
+            <XIcon />
+          </IconControl>
+        </div>
+        {description !== undefined && <DrawerDescription>{description}</DrawerDescription>}
+      </DrawerHeader>
+      <DrawerBody key={id} application={application} onDelete={onDelete} />
+    </DrawerContent>
+  );
+}
+
+function DrawerBody({
+  application: { name, resourceIds },
+  onDelete,
+}: {
+  application: Application;
+  onDelete: () => Promise<void>;
+}) {
+  const [hoveredResourceId, setHoveredResourceId] = useState<string>();
+  const [focusedResourceId, setFocusedResourceId] = useState<string>();
+  const highlightedResourceId = hoveredResourceId ?? focusedResourceId;
+  const members = resourcesInDefaultOrder(resourceIds);
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4">
+      {/* Dragging the graph pans it; without this, a drag to the right would swipe the drawer shut. */}
+      <div data-base-ui-swipe-ignore className="h-96 shrink-0 overflow-hidden rounded-lg border">
+        <ApplicationGraph
+          name={name}
+          resources={members}
+          highlightedResourceId={highlightedResourceId}
+          onResourceHover={setHoveredResourceId}
+        />
+      </div>
+      <section className="flex flex-col gap-2" aria-labelledby="member-resources">
+        <h3 id="member-resources" className="text-sm font-semibold">
+          Member resources{" "}
+          <span className="font-normal text-muted-foreground tabular-nums">· {members.length}</span>
+        </h3>
+        <MemberTable
+          resources={members}
+          highlightedResourceId={highlightedResourceId}
+          onResourceHover={setHoveredResourceId}
+          onResourceFocus={setFocusedResourceId}
+        />
+      </section>
+      <DeleteApplication name={name} onDelete={onDelete} />
+    </div>
   );
 }

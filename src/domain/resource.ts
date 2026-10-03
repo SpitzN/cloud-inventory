@@ -15,7 +15,6 @@ export const ResourceSchema = z.object({
   criticality: CriticalitySchema,
   owner: z.string(),
   tags: z.array(z.string()),
-  // In the sample data and the table requirements, but missing from the first interface (ADR 0008).
   openIssues: z.number().int().nonnegative(),
 });
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { routeHeader } from "@/app/shell/lib/route-header";
+import { pageRouteId, routeHeader } from "@/app/shell/lib/route-header";
 
 describe("routeHeader", () => {
   it("reads the header the deepest route declares", () => {
@@ -29,5 +29,17 @@ describe("routeHeader", () => {
 
   it("refuses matched routes that declare no header at all", () => {
     expect(() => routeHeader([{ handle: undefined }])).toThrow();
+  });
+});
+
+describe("pageRouteId", () => {
+  it("names the route whose header is shown", () => {
+    const matches = [
+      { id: "shell", handle: undefined },
+      { id: "applications", handle: { title: "Applications" } },
+      { id: "drawer", handle: undefined },
+    ];
+
+    expect(pageRouteId(matches)).toBe("applications");
   });
 });

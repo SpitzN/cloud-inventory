@@ -43,12 +43,22 @@ const tableRowVariants = cva(
   {
     variants: {
       highlighted: {
-        true: "bg-muted hover:bg-muted",
+        true: "bg-accent hover:bg-accent",
+        false: "",
+      },
+      selected: {
+        true: "bg-accent hover:bg-accent",
+        false: "",
+      },
+      focusable: {
+        true: "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid",
         false: "",
       },
     },
     defaultVariants: {
       highlighted: false,
+      selected: false,
+      focusable: false,
     },
   },
 );
@@ -56,12 +66,14 @@ const tableRowVariants = cva(
 function TableRow({
   className,
   highlighted,
+  selected,
+  focusable,
   ...props
 }: React.ComponentProps<"tr"> & VariantProps<typeof tableRowVariants>) {
   return (
     <tr
       data-slot="table-row"
-      className={cn(tableRowVariants({ highlighted }), className)}
+      className={cn(tableRowVariants({ highlighted, selected, focusable }), className)}
       {...props}
     />
   );

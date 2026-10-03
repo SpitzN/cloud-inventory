@@ -154,15 +154,10 @@ export function resourceById(id: string) {
   return RESOURCES_BY_ID.get(id);
 }
 
-/** The Resources with these ids, in the order given. An id with no Resource is left out. */
 export function resourcesWithIds(ids: Iterable<string>) {
   return [...ids].flatMap((id) => resourceById(id) ?? []);
 }
 
-/**
- * The Application a first run starts with. Its id is fixed, so its address is the same on every
- * first run.
- */
 export const exampleApplication: Application = {
   id: "data-platform",
   name: "Data Platform",

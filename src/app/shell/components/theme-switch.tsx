@@ -3,7 +3,6 @@ import { useTheme } from "next-themes";
 import { IconControl } from "@/components/icon-control";
 import { Button } from "@/components/ui/button";
 
-/** Until it is first used, the theme follows the system. */
 export function ThemeSwitch() {
   const { resolvedTheme, setTheme } = useTheme();
   const next = resolvedTheme === "dark" ? "light" : "dark";

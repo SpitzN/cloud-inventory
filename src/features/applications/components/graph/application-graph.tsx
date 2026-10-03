@@ -1,7 +1,17 @@
 import "@xyflow/react/dist/style.css";
-import { Controls, ReactFlow, useReactFlow, type Edge, type NodeTypes } from "@xyflow/react";
-import { useTheme } from "next-themes";
+import {
+  Panel,
+  ReactFlow,
+  useReactFlow,
+  useStore,
+  type Edge,
+  type FitViewOptions,
+  type NodeTypes,
+} from "@xyflow/react";
+import { MinusIcon, PlusIcon, ScanIcon } from "lucide-react";
 import { useEffect } from "react";
+import { IconControl } from "@/components/icon-control";
+import { Button } from "@/components/ui/button";
 import type { Resource } from "@/domain/resource";
 import {
   ApplicationNode,
@@ -20,23 +30,16 @@ const NODE_TYPES = {
 
 const CENTRE_ID = "application";
 
-// Positions are node centres, as the ring layout gives them.
 const NODE_ORIGIN: [number, number] = [0.5, 0.5];
 
 // React Flow's default of 0.5 stops fit-to-view short of twelve Members in the drawer's graph.
 const MIN_ZOOM = 0.25;
 
+// Fitting never enlarges past the nodes' own size, so a few nodes do not fill the canvas.
+const FIT_VIEW_OPTIONS: FitViewOptions = { maxZoom: 1 };
+
 type GraphNode = ApplicationGraphNode | ResourceGraphNode;
 
-/**
- * An Application as a hub-and-spoke graph: its name at the centre and one node per Resource on a
- * ring, in the order given, starting at the top. Fills its parent, which needs a height. Read-only:
- * the view pans, zooms and fits, and fits again when the Resources change.
- *
- * Optionally, the Resource whose id is `highlightedResourceId` is shown highlighted, and
- * `onResourceHover` is called with a Resource's id when the pointer enters its node and with
- * `undefined` when it leaves.
- */
 export function ApplicationGraph({
   name,
   resources,
@@ -48,7 +51,6 @@ export function ApplicationGraph({
   highlightedResourceId?: string | undefined;
   onResourceHover?: (resourceId: string | undefined) => void;
 }) {
-  const { resolvedTheme } = useTheme();
   const positions = ringLayout(resources.length);
 
   const nodes: GraphNode[] = [
@@ -81,7 +83,6 @@ export function ApplicationGraph({
       edges={edges}
       nodeTypes={NODE_TYPES}
       nodeOrigin={NODE_ORIGIN}
-      colorMode={resolvedTheme === "dark" ? "dark" : "light"}
       nodesDraggable={false}
       nodesConnectable={false}
       deleteKeyCode={null}
@@ -102,21 +103,65 @@ export function ApplicationGraph({
         onResourceHover?.(undefined);
       }}
     >
-      <Controls showInteractive={false} />
+      <GraphControls />
       {/* Joined into a string so the effect compares the ids by value, not the array by identity. */}
       <FitViewOnChange nodeIds={resources.map((resource) => resource.id).join(",")} />
     </ReactFlow>
   );
 }
 
-/** Fits the view on mount and whenever `nodeIds` changes; React Flow's `fitView` prop fits only once. */
+/** React Flow's `fitView` prop fits only once; this fits again whenever `nodeIds` changes. */
 function FitViewOnChange({ nodeIds }: { nodeIds: string }) {
   const { fitView } = useReactFlow();
 
   useEffect(() => {
-    // Queued by React Flow until the new nodes are measured.
-    void fitView();
+    void fitView(FIT_VIEW_OPTIONS);
   }, [fitView, nodeIds]);
 
   return null;
+}
+
+function GraphControls() {
+  const { zoomIn, zoomOut, fitView } = useReactFlow();
+  const isMinZoom = useStore((state) => state.transform[2] <= state.minZoom);
+  const isMaxZoom = useStore((state) => state.transform[2] >= state.maxZoom);
+
+  return (
+    <Panel position="bottom-left" className="flex flex-col gap-1">
+      <IconControl
+        label="Zoom in"
+        render={
+          <Button
+            variant="outline"
+            size="icon-sm"
+            disabled={isMaxZoom}
+            onClick={() => void zoomIn()}
+          />
+        }
+      >
+        <PlusIcon />
+      </IconControl>
+      <IconControl
+        label="Zoom out"
+        render={
+          <Button
+            variant="outline"
+            size="icon-sm"
+            disabled={isMinZoom}
+            onClick={() => void zoomOut()}
+          />
+        }
+      >
+        <MinusIcon />
+      </IconControl>
+      <IconControl
+        label="Fit to view"
+        render={
+          <Button variant="outline" size="icon-sm" onClick={() => void fitView(FIT_VIEW_OPTIONS)} />
+        }
+      >
+        <ScanIcon />
+      </IconControl>
+    </Panel>
+  );
 }

@@ -20,37 +20,35 @@ export function ShellSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <div className="flex h-8 items-center gap-2 px-2 text-sm font-medium">
+        <div className="flex h-8 items-center gap-2 px-2 text-sm font-semibold">
           <CloudIcon className="size-4 shrink-0" />
           <span className="truncate group-data-[collapsible=icon]:hidden">Cloud Inventory</span>
         </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarMenu>
-            <SectionItem
-              to="/resources"
-              label="Resources"
-              icon={<ServerIcon />}
-              count={resources.length}
-            />
-            <SectionItem
-              to="/applications"
-              label="Applications"
-              icon={<BoxesIcon />}
-              count={applicationCount}
-            />
-          </SidebarMenu>
+          <nav aria-label="Main">
+            <SidebarMenu>
+              <SectionItem
+                to="/resources"
+                label="Resources"
+                icon={<ServerIcon />}
+                count={resources.length}
+              />
+              <SectionItem
+                to="/applications"
+                label="Applications"
+                icon={<BoxesIcon />}
+                count={applicationCount}
+              />
+            </SidebarMenu>
+          </nav>
         </SidebarGroup>
       </SidebarContent>
     </Sidebar>
   );
 }
 
-/**
- * A section's link, active on the section's address and every address below it. The count, when
- * given, shows beside the label and hides on the icon rail.
- */
 function SectionItem({
   to,
   label,
@@ -62,13 +60,13 @@ function SectionItem({
   icon: ReactElement;
   count?: number;
 }) {
-  // Not NavLink: it reports "active" only to its own className and children functions, and
-  // SidebarMenuButton needs it as the `isActive` prop.
+  // Not NavLink, which reports "active" only to its own className and children functions.
   const isActive = useMatch(`${to}/*`) !== null;
 
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
+        variant="fade"
         isActive={isActive}
         tooltip={label}
         render={<Link to={to} aria-current={isActive ? "page" : undefined} />}

@@ -4,15 +4,11 @@ import type { Application } from "@/domain/application";
 import { startingApplications } from "@/features/applications/lib/saved-applications";
 
 interface ApplicationsStore {
-  /** Newest first. */
   applications: Application[];
-  /** Adds an Application with a generated id to the front of the list, and returns it. */
   create: (application: Omit<Application, "id">) => Application;
-  /** Removes the Application with this id. Its Resources are not touched. */
   remove: (id: string) => void;
 }
 
-/** The Applications, saved in localStorage under one versioned key and read back on load. */
 export const useApplicationsStore = create<ApplicationsStore>()(
   persist(
     (set, get) => ({

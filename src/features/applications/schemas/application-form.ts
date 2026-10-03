@@ -4,11 +4,6 @@ function comparableName(name: string) {
   return name.trim().toLowerCase();
 }
 
-/**
- * The creation form's schema. A name equal to one of `namesInUse`, ignoring case and surrounding
- * whitespace, is rejected. The output holds the trimmed name, the trimmed description (left out
- * when empty) and the Members in the order given.
- */
 export function applicationFormSchema(namesInUse: readonly string[]) {
   const taken = new Set(namesInUse.map(comparableName));
 

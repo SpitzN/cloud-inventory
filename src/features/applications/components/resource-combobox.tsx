@@ -18,11 +18,6 @@ import { compareResourcesInDefaultOrder } from "@/domain/resource-order";
 
 const OPTIONS = resources.toSorted(compareResourcesInDefaultOrder);
 
-/**
- * A controlled chip combobox over Resource ids. `value` is shown as chips in the order given;
- * picking an option calls `onValueChange` with its id added at the end, and removing a chip calls
- * it with that id left out. The input props go to the text input, which also takes the ref.
- */
 export function ResourceCombobox({
   value,
   onValueChange,
@@ -30,7 +25,10 @@ export function ResourceCombobox({
 }: {
   value: readonly string[];
   onValueChange: (value: string[]) => void;
-} & Pick<ComponentProps<"input">, "id" | "ref" | "aria-invalid" | "aria-describedby">) {
+} & Pick<
+  ComponentProps<"input">,
+  "id" | "ref" | "aria-invalid" | "aria-describedby" | "aria-required"
+>) {
   const anchor = useComboboxAnchor();
   const members = resourcesWithIds(value);
 
@@ -62,8 +60,14 @@ export function ResourceCombobox({
               <span className="truncate" title={resource.name}>
                 {resource.name}
               </span>
-              <span className="ml-auto text-muted-foreground">{resource.type}</span>
-              <Badge variant={criticalityTone(resource.criticality)}>{resource.criticality}</Badge>
+              <span className="ml-auto shrink-0 whitespace-nowrap text-muted-foreground">
+                {resource.type}
+              </span>
+              <span className="flex w-16 shrink-0">
+                <Badge variant={criticalityTone(resource.criticality)}>
+                  {resource.criticality}
+                </Badge>
+              </span>
             </ComboboxItem>
           )}
         </ComboboxList>
