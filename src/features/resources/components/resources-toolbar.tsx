@@ -1,10 +1,13 @@
 import type { ReactNode } from "react";
-import { Button } from "@/components/ui/button";
+import { Link } from "react-router";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useSelectionStore } from "@/features/resources/stores/selection";
 
 /**
  * The bar above the Resources table: the search, the filters given as children, "Clear filters"
- * while anything is active, and the count of rows shown.
+ * while anything is active, and the count of rows shown. At the right, the Selection count and its
+ * "Clear" while a row is ticked, then "Create application".
  */
 export function ResourcesToolbar({
   search,
@@ -13,6 +16,7 @@ export function ResourcesToolbar({
   onClearFilters,
   shownCount,
   totalCount,
+  hiddenSelectedCount,
   children,
 }: {
   search: string;
@@ -21,8 +25,13 @@ export function ResourcesToolbar({
   onClearFilters: () => void;
   shownCount: number;
   totalCount: number;
+  /** Ticked Resources the search and filters hide. */
+  hiddenSelectedCount: number;
   children: ReactNode;
 }) {
+  const selectedCount = useSelectionStore((state) => state.ids.size);
+  const clearSelection = useSelectionStore((state) => state.clear);
+
   return (
     <div className="flex items-center gap-2">
       <Input
@@ -41,9 +50,25 @@ export function ResourcesToolbar({
           Clear filters
         </Button>
       )}
-      <span className="text-sm text-muted-foreground tabular-nums">
+      <span className="text-sm whitespace-nowrap text-muted-foreground tabular-nums">
         {shownCount} of {totalCount}
       </span>
+      <div className="ml-auto flex items-center gap-2">
+        {selectedCount > 0 && (
+          <>
+            <span className="text-sm whitespace-nowrap tabular-nums">
+              {selectedCount} selected
+              {hiddenSelectedCount > 0 && ` (${hiddenSelectedCount} hidden)`}
+            </span>
+            <Button variant="ghost" onClick={clearSelection}>
+              Clear
+            </Button>
+          </>
+        )}
+        <Link to="/applications/new" className={buttonVariants()}>
+          Create application
+        </Link>
+      </div>
     </div>
   );
 }
