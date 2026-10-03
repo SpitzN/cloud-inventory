@@ -1,2 +1,2 @@
-/** A badge's colour on a four-step scale, from quiet to alarming. Each tone is a `Badge` variant coloured by one theme token. */
+/** From quiet to alarming; each is a `Badge` variant. */
 export type Tone = "neutral" | "caution" | "warning" | "danger";

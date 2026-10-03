@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useLeaveNewApplication } from "@/features/applications/hooks/use-leave-new-application";
 
-/** The page's title bar, and the document title, from the header the matched route declares. */
+/** Also sets the document title. */
 export function ShellHeader() {
   const { title, backChevron } = routeHeader(useMatches());
 

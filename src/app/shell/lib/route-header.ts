@@ -5,7 +5,6 @@ const RouteHeaderSchema = z.object({
   backChevron: z.boolean().default(false),
 });
 
-/** What a route declares in its `handle` for the shell's header. */
 export type RouteHeaderDeclaration = z.input<typeof RouteHeaderSchema>;
 
 /**

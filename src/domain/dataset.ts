@@ -1,6 +1,5 @@
 import type { Resource } from "@/domain/resource";
 
-/** The twelve Resources Cloud Inventory starts with (docs/dataset.md). Read-only; never parsed. */
 export const resources: readonly Resource[] = [
   {
     id: "r-001",
@@ -150,7 +149,6 @@ export const resources: readonly Resource[] = [
 
 const RESOURCES_BY_ID = new Map(resources.map((resource) => [resource.id, resource]));
 
-/** The Resource with this id, or undefined when the dataset has none. */
 export function resourceById(id: string) {
   return RESOURCES_BY_ID.get(id);
 }

@@ -30,7 +30,6 @@ const router = createBrowserRouter([
             path: "applications",
             element: <ApplicationsPage />,
             handle: { title: "Applications" } satisfies RouteHeaderDeclaration,
-            // No handle: the drawer keeps the Applications header.
             children: [{ path: ":id", element: <ApplicationDrawer /> }],
           },
           {

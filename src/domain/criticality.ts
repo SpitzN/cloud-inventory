@@ -18,7 +18,6 @@ const CRITICALITY_TONE = {
   critical: "danger",
 } as const satisfies Record<Criticality, Tone>;
 
-/** The badge tone a level is shown in. */
 export function criticalityTone(criticality: Criticality) {
   return CRITICALITY_TONE[criticality];
 }

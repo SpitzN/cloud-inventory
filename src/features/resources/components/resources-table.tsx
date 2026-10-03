@@ -14,8 +14,6 @@ import { resources } from "@/domain/dataset";
 import type { Resource } from "@/domain/resource";
 import { compareResourcesInDefaultOrder } from "@/domain/resource-order";
 
-// Nothing is registered yet: sorting, filtering, faceting and row selection arrive with their
-// tickets. Until sorting does, the rows are handed over already in the default order.
 const features = tableFeatures({});
 
 const columnHelper = createColumnHelper<typeof features, Resource>();
@@ -48,7 +46,6 @@ const columns = columnHelper.columns([
 
 const rowsInDefaultOrder = resources.toSorted(compareResourcesInDefaultOrder);
 
-/** Every Resource, one row each, with its name, Type, Provider, Environment, Criticality and open issues. */
 export function ResourcesTable() {
   const table = useTable({
     features,

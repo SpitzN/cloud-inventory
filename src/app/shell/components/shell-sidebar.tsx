@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/sidebar";
 import { resources } from "@/domain/dataset";
 
-/** The product name and the two sections. Folds to an icon rail. */
 export function ShellSidebar() {
   return (
     <Sidebar collapsible="icon">
