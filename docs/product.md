@@ -207,20 +207,20 @@ Search, filters and sort are held in the query string and survive a reload.
 
 ## Edge cases
 
-| Situation                                                                     | Behaviour                                                                                     |
-| ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| Search and filters match nothing                                              | A message in place of the table body, with "Clear filters"                                    |
-| Every Application has been deleted                                            | The empty state on the Applications page                                                      |
-| `/applications/:id` with an unknown id                                        | Go to `/applications`, show "Application not found"                                           |
-| Saved data cannot be read                                                     | Start from the first-run state                                                                |
-| A saved Application refers to a missing Resource                              | That Member is dropped; the Application is kept                                               |
-| Malformed filter or sort values in the address                                | Ignored; valid ones still apply                                                               |
-| New application page opened directly, then cancelled                          | Goes to `/applications`                                                                       |
-| New application page reloaded                                                 | The form starts empty, because the Selection is not saved                                     |
-| "New application" clicked on the Applications page while rows are ticked      | The form starts with the ticked Resources as Members                                          |
+| Situation                                                                        | Behaviour                                                                                      |
+| -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Search and filters match nothing                                                 | A message in place of the table body, with "Clear filters"                                     |
+| Every Application has been deleted                                               | The empty state on the Applications page                                                       |
+| `/applications/:id` with an unknown id                                           | Go to `/applications`, show "Application not found"                                            |
+| Saved data cannot be read                                                        | Start from the first-run state                                                                 |
+| A saved Application refers to a missing Resource                                 | That Member is dropped; the Application is kept                                                |
+| Malformed filter or sort values in the address                                   | Ignored; valid ones still apply                                                                |
+| New application page opened directly, then cancelled                             | Goes to `/applications`                                                                        |
+| New application page reloaded                                                    | The form starts empty, because the Selection is not saved                                      |
+| "New application" clicked on the Applications page while rows are ticked         | The form starts with the ticked Resources as Members                                           |
 | An Application with no Members (possible only through the missing-Resource rule) | The card reads "0 resources"; the drawer shows the centre node alone and an empty Member table |
-| An unknown address                                                            | The not-found page, inside the shell                                                          |
-| An unexpected runtime error                                                   | An error screen with a way back to Resources                                                  |
+| An unknown address                                                               | The not-found page, inside the shell                                                           |
+| An unexpected runtime error                                                      | An error screen with a way back to Resources                                                   |
 
 ## Accessibility
 
