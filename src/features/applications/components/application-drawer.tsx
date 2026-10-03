@@ -83,7 +83,10 @@ export function ApplicationDrawer() {
           application={shown}
           onDelete={async () => {
             remove(shown.id);
-            toast.add({ title: "Application deleted", description: shown.name });
+            toast.add({
+              title: "Application deleted",
+              description: <span className="wrap-break-word">{shown.name}</span>,
+            });
             await goBack();
           }}
         />
@@ -117,7 +120,13 @@ function DrawerPanel({
             <XIcon />
           </IconControl>
         </div>
-        {description !== undefined && <DrawerDescription>{description}</DrawerDescription>}
+        {description !== undefined && (
+          <DrawerDescription>
+            <span className="line-clamp-2 wrap-break-word" title={description}>
+              {description}
+            </span>
+          </DrawerDescription>
+        )}
       </DrawerHeader>
       <DrawerBody key={id} application={application} onDelete={onDelete} />
     </DrawerContent>

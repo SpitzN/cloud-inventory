@@ -4,10 +4,17 @@ import { Controller, useForm, type Control } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText,
+  InputGroupTextarea,
+} from "@/components/ui/input-group";
 import { ResourceCombobox } from "@/features/applications/components/resource-combobox";
 import {
   applicationFormSchema,
+  DESCRIPTION_MAX_LENGTH,
+  NAME_MAX_LENGTH,
   type ApplicationFormInput,
   type ApplicationFormValues,
 } from "@/features/applications/schemas/application-form";
@@ -51,6 +58,7 @@ export function ApplicationForm({
                   {...field}
                   id={`${id}-name`}
                   autoComplete="off"
+                  maxLength={NAME_MAX_LENGTH}
                   aria-required
                   aria-invalid={fieldState.invalid}
                   aria-describedby={fieldState.invalid ? `${id}-name-error` : undefined}
@@ -68,12 +76,26 @@ export function ApplicationForm({
                   Description
                   <span className="font-normal text-muted-foreground">optional</span>
                 </FieldLabel>
-                <Textarea
-                  {...field}
-                  id={`${id}-description`}
-                  aria-invalid={fieldState.invalid}
-                  aria-describedby={fieldState.invalid ? `${id}-description-error` : undefined}
-                />
+                <InputGroup>
+                  <InputGroupTextarea
+                    {...field}
+                    id={`${id}-description`}
+                    maxLength={DESCRIPTION_MAX_LENGTH}
+                    aria-invalid={fieldState.invalid}
+                    aria-describedby={
+                      fieldState.invalid
+                        ? `${id}-description-count ${id}-description-error`
+                        : `${id}-description-count`
+                    }
+                  />
+                  <InputGroupAddon align="block-end">
+                    <InputGroupText id={`${id}-description-count`} className="ml-auto">
+                      <span className="tabular-nums">
+                        {field.value.length}/{DESCRIPTION_MAX_LENGTH}
+                      </span>
+                    </InputGroupText>
+                  </InputGroupAddon>
+                </InputGroup>
                 <FieldError id={`${id}-description-error`} errors={[fieldState.error]} />
               </Field>
             )}

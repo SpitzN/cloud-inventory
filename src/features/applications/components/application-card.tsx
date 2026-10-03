@@ -18,16 +18,16 @@ export function ApplicationCard({ application }: { application: Application }) {
     >
       <Card className="h-full">
         <CardHeader>
-          <CardTitle>
+          <CardTitle className="min-w-0">
             <span className="block truncate" title={name}>
               {name}
             </span>
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="min-w-0">
             {description === undefined ? (
               "No description"
             ) : (
-              <span className="line-clamp-2" title={description}>
+              <span className="line-clamp-2 wrap-break-word" title={description}>
                 {description}
               </span>
             )}
