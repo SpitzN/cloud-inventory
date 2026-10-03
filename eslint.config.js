@@ -1,4 +1,5 @@
 import js from "@eslint/js";
+import { plugin as shadcn } from "@shadcn/lint";
 import prettier from "eslint-config-prettier/flat";
 import tailwind from "eslint-plugin-better-tailwindcss";
 import jsxA11y from "eslint-plugin-jsx-a11y";
@@ -205,6 +206,36 @@ export default defineConfig(
         "error",
         { ignore: ["^nodrag$", "^nopan$", "^nowheel$"] },
       ],
+    },
+  },
+
+  // --- shadcn/ui primitives: a caller's className places one and leaves its look alone.
+  // The plugin's colour, arbitrary-value and unknown-class rules stay off: the block above
+  // already checks those classes.
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    plugins: { shadcn },
+    settings: {
+      shadcn: {
+        // Appended to every finding: the built-in text offers a new variant in the primitive's file.
+        note: "In this project src/components/ui/ stays as generated: do not add a variant or size there.",
+      },
+    },
+    rules: {
+      "shadcn/no-restyle": [
+        "error",
+        {
+          allow: ["layout"],
+          // The owner's two exceptions: a table cell truncates and aligns its figures, and a
+          // badge takes its colour from a theme token (the Criticality badge).
+          contracts: [
+            { pattern: "^Table(Cell|Head)$", allow: ["layout", "typography"] },
+            { pattern: "^Badge$", allow: ["layout", "color"] },
+          ],
+        },
+      ],
+      // no-restyle judges only the classes it can read; this reports the ones it cannot.
+      "shadcn/require-static-classes": "error",
     },
   },
 
