@@ -26,7 +26,7 @@ Read these before writing or changing code under `src/`:
 - `pnpm check` (typecheck, lint, format check, tests) passes before work is called done.
 - A failing check is fixed in the code. The TypeScript, ESLint and Prettier configurations stay as they are, and every commit goes through the pre-commit hook.
 - A new dependency needs the owner's approval first.
-- Files in `src/components/ui/` stay exactly as shadcn/ui generated them.
+- `src/components/ui/` holds what the shadcn CLI generates, hooks included, and those files stay exactly as generated. Everything outside it is project code and passes every check.
 
 ## Agent skills
 
