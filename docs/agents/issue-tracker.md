@@ -10,6 +10,18 @@ Issues and specs for this repo live as markdown files in `.scratch/`.
 - Triage state is recorded as a `Status:` line near the top of each issue file (see `triage-labels.md` for the role strings)
 - Comments and conversation history append to the bottom of the file under a `## Comments` heading
 
+## Implementation tickets
+
+A ticket under `.scratch/<feature>/issues/` moves `ready-for-agent -> in-progress -> done`, or `in-progress -> needs-info`.
+
+- `ready-for-agent`: the owner, at triage.
+- `in-review`: the owner, for a ticket implemented by hand and waiting on its pull request; the loop treats it as not yet done.
+- `in-progress`: the ralph loop (`.claude/skills/ralph/`), before it launches a session on the ticket.
+- `done`: the loop, after its gate passes: a new commit, a clean tree, `pnpm check` green.
+- `needs-info`: the agent, with the question under `## Comments` and nothing committed; the loop stops.
+
+A `- [ ]` box still unticked at `done` has its reason under `## Comments`. The loop reads `Blocked by:` the way wayfinding does: the ticket is unblocked when every number it lists is `done`.
+
 ## When a skill says "publish to the issue tracker"
 
 Create a new file under `.scratch/<feature-slug>/` (creating the directory if needed).

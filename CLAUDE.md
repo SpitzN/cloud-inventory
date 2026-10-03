@@ -41,3 +41,7 @@ The five default labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready
 ### Domain docs
 
 Single-context: `GLOSSARY.md` at the repo root and ADRs in `docs/adr/`. See `docs/agents/domain.md`.
+
+### Ralph loop
+
+`/ralph afk <n>` implements the next `<n>` ready tickets unattended, one session per ticket; `/ralph dry-run` shows the order. See `.claude/skills/ralph/SKILL.md`.
