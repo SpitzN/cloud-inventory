@@ -1,5 +1,7 @@
 import { ThemeProvider } from "next-themes";
-import { createBrowserRouter, Navigate, RouterProvider } from "react-router";
+import { createBrowserRouter, Navigate } from "react-router";
+// The DOM build, which carries out a navigation's `flushSync` option.
+import { RouterProvider } from "react-router/dom";
 import { ApplicationsPage } from "@/app/routes/applications";
 import { NewApplicationPage } from "@/app/routes/new-application";
 import { NotFoundPage } from "@/app/routes/not-found";
