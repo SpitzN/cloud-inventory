@@ -334,8 +334,6 @@ export default defineConfig(
         "error",
         {
           allow: ["layout"],
-          // The owner's exception: a table cell truncates and aligns its figures.
-          contracts: [{ pattern: "^Table(Cell|Head)$", allow: ["layout", "typography"] }],
         },
       ],
       // no-restyle judges only the classes it can read; this reports the ones it cannot.

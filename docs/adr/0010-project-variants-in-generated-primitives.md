@@ -1,6 +1,6 @@
 # Project variants in generated primitives
 
-A look that a `src/components/ui/` primitive lacks is added as a variant to that primitive's `cva`. The Criticality badge's four tones (`neutral`, `caution`, `warning`, `danger`) are `Badge` variants, and a feature picks one with `<Badge variant={criticalityTone(criticality)}>`. Until ticket 04, generated files stayed exactly as the shadcn CLI wrote them. The owner chose this when the first Criticality badge was coloured from outside the primitive by a chain of `tone === "x" && "..."` conditions inside `cn`: a look picked by a prop is a `cva` variant.
+A look that a `src/components/ui/` primitive lacks is added as a variant to that primitive's `cva`. The Criticality badge's four tones (`neutral`, `caution`, `warning`, `danger`) are `Badge` variants, and a feature picks one with `<Badge variant={criticalityTone(criticality)}>`. `TableHead` and `TableCell` have an `align` variant (`start`, `end`) for number columns. Until ticket 04, generated files stayed exactly as the shadcn CLI wrote them. The owner chose this when the first Criticality badge was coloured from outside the primitive by a chain of `tone === "x" && "..."` conditions inside `cn`: a look picked by a prop is a `cva` variant.
 
 Two alternatives were rejected:
 
@@ -9,8 +9,8 @@ Two alternatives were rejected:
 
 ## Consequences
 
-- A generated file differs from the CLI's output by its added variants and nothing else. Every other change to a generated file is still a question for the owner.
+- A generated file differs from the CLI's output by its added variants and nothing else. Where the component had no `cva`, as `TableHead` and `TableCell` had none, it gains one holding the generated classes, and its props omit any HTML attribute of the same name, such as `align`. Every other change to a generated file is still a question for the owner.
 - `shadcn add --overwrite` on such a file drops the added variants, which are then added again.
 - ESLint ignores `src/components/ui/`, so token and palette checks do not cover the added classes. Review does.
-- The `Badge` colour contract in `eslint.config.js` is gone: colour classes on `<Badge>` now fail `no-restyle`.
+- The `no-restyle` contracts in `eslint.config.js` are gone: colour classes on `<Badge>` and typography classes on `<TableHead>` and `<TableCell>` now fail.
 - In the split described in [ADR 0009](./0009-feature-slices-with-enforced-boundaries.md), the look is a variant of the primitive where one fits, rather than a wrapper component in `src/components/`.

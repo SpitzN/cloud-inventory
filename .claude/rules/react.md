@@ -12,7 +12,7 @@ paths:
 - A wrapper around a `components/ui` primitive adds something the primitive lacks, such as domain meaning or fixed behaviour. Otherwise the primitive is used directly.
 - Base UI variants compose with the `render` prop.
 - Class names are merged with `cn`. A look picked by a prop is a `cva` variant, never a chain of `prop === "x" && "..."` conditions inside `cn`.
-- A look a `components/ui` primitive lacks is a new variant in that primitive's `cva`, as the four tones are on `Badge`, not classes on its `className`. A `cva` result passed to a primitive's `className` fails `shadcn/require-static-classes`.
+- A look a `components/ui` primitive lacks is a new variant in that primitive's `cva`, as the four tones are on `Badge` and `align` is on `TableHead` and `TableCell`, not classes on its `className`. A `cva` result passed to a primitive's `className` fails `shadcn/require-static-classes`.
 
 ## React Compiler
 

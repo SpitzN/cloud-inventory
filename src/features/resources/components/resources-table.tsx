@@ -1,5 +1,4 @@
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table";
-import { cn } from "cn";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -41,8 +40,15 @@ const columns = columnHelper.columns([
     header: "Criticality",
     cell: ({ getValue }) => <Badge variant={criticalityTone(getValue())}>{getValue()}</Badge>,
   }),
-  columnHelper.accessor("openIssues", { header: "Open issues" }),
+  columnHelper.accessor("openIssues", {
+    header: "Open issues",
+    cell: ({ getValue }) => <span className="tabular-nums">{getValue()}</span>,
+  }),
 ]);
+
+function columnAlign(columnId: string) {
+  return columnId === "openIssues" ? "end" : "start";
+}
 
 const rowsInDefaultOrder = resources.toSorted(compareResourcesInDefaultOrder);
 
@@ -60,10 +66,7 @@ export function ResourcesTable() {
         {table.getHeaderGroups().map((headerGroup) => (
           <TableRow key={headerGroup.id}>
             {headerGroup.headers.map((header) => (
-              <TableHead
-                key={header.id}
-                className={cn(header.column.id === "openIssues" && "text-right")}
-              >
+              <TableHead key={header.id} align={columnAlign(header.column.id)}>
                 <table.FlexRender header={header} />
               </TableHead>
             ))}
@@ -74,10 +77,7 @@ export function ResourcesTable() {
         {table.getRowModel().rows.map((row) => (
           <TableRow key={row.id}>
             {row.getAllCells().map((cell) => (
-              <TableCell
-                key={cell.id}
-                className={cn(cell.column.id === "openIssues" && "text-right tabular-nums")}
-              >
+              <TableCell key={cell.id} align={columnAlign(cell.column.id)}>
                 <table.FlexRender cell={cell} />
               </TableCell>
             ))}
