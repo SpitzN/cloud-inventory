@@ -12,6 +12,10 @@ export function useCreateApplication() {
     const { id, name } = create(application);
     await navigate("/applications", { replace: true });
     await navigate(`/applications/${id}`);
-    toast.add({ type: "success", title: "Application created", description: name });
+    toast.add({
+      type: "success",
+      title: "Application created",
+      description: <span className="wrap-break-word">{name}</span>,
+    });
   };
 }

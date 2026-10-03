@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+export const NAME_MAX_LENGTH = 60;
+export const DESCRIPTION_MAX_LENGTH = 200;
+
 function comparableName(name: string) {
   return name.trim().toLowerCase();
 }
@@ -13,12 +16,15 @@ export function applicationFormSchema(namesInUse: readonly string[]) {
         .string()
         .trim()
         .min(1, "Enter a name.")
-        .max(60, "Use 60 characters or fewer.")
+        .max(NAME_MAX_LENGTH, `Use ${NAME_MAX_LENGTH} characters or fewer.`)
         .refine(
           (name) => !taken.has(comparableName(name)),
           "An application with this name already exists.",
         ),
-      description: z.string().trim().max(200, "Use 200 characters or fewer."),
+      description: z
+        .string()
+        .trim()
+        .max(DESCRIPTION_MAX_LENGTH, `Use ${DESCRIPTION_MAX_LENGTH} characters or fewer.`),
       resourceIds: z.array(z.string()).min(1, "Add at least one resource."),
     })
     .transform(({ description, ...application }) =>

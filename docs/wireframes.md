@@ -125,7 +125,7 @@ Behaviour: [product.md, Resources page](./product.md#resources-page).
 **Form**, top to bottom:
 
 - **Name:** a text input.
-- **Description:** a textarea, marked "optional".
+- **Description:** a textarea, marked "optional", with a counter such as "42/200" at its bottom right.
 - **Resources:** a chip combobox. The label carries the count, for example "Resources · 3".
   - Each Member is a chip showing the Resource's name, with a remove button. A long name truncates.
   - Typing opens the option list. Each option shows name, Type and the Criticality badge, and is marked when it is already a Member.
@@ -167,7 +167,7 @@ Behaviour: [product.md, New application page](./product.md#new-application-page)
 **Cards**
 
 - A grid of cards, newest first.
-- Each card shows the name and description at the top. Its bottom line reads "5 resources · 15 open issues", with the Members' most critical level at the right as the same Criticality badge as the Resources table. The line sits at the bottom of the card, so the lines of a row of cards align.
+- Each card shows the name and description at the top. A long name truncates, with the full name on hover. Its bottom line reads "5 resources · 15 open issues", with the Members' most critical level at the right as the same Criticality badge as the Resources table. The line sits at the bottom of the card, so the lines of a row of cards align.
 - Counts agree with their number: "1 resource", "1 open issue". "0 open issues" is muted. With no Members the line reads "0 resources" alone, with no badge.
 - A screen reader hears the badge as "most critical member: high", so the card's link does not end in a bare level.
 - A missing description reads "No description" in muted text. A long description is clamped to two lines.
@@ -223,7 +223,7 @@ Behaviour: [product.md, Applications page](./product.md#applications-page).
 **Contents**, top to bottom:
 
 - The Application's name, with a close button at the right.
-- The description, when there is one.
+- The description, when there is one, clamped to two lines with the full text on hover.
 - The graph.
 - The Member table, headed "Member resources · 5", with four columns: name, Type, Criticality, open issues. Criticality is the same badge as in the Resources table.
 - "Delete application", styled as a destructive action.

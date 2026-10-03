@@ -126,11 +126,11 @@ Search, filters and sort are held in the query string and survive a reload.
 
 ### Fields
 
-| Field       | Control                   | Rules                                                                                                                                    |
-| ----------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Name        | text input                | Required after trimming. At most 60 characters. Must not match an existing Application's name, ignoring case and surrounding whitespace. |
-| Description | textarea, marked optional | At most 200 characters after trimming.                                                                                                   |
-| Resources   | chip combobox             | At least one Member.                                                                                                                     |
+| Field       | Control                   | Rules                                                                                                                                                        |
+| ----------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Name        | text input                | Required after trimming. At most 60 characters; typing stops there. Must not match an existing Application's name, ignoring case and surrounding whitespace. |
+| Description | textarea, marked optional | At most 200 characters; typing stops there, and a counter shows how many are used.                                                                           |
+| Resources   | chip combobox             | At least one Member.                                                                                                                                         |
 
 ### Resources combobox
 

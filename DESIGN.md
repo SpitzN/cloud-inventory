@@ -271,7 +271,7 @@ Each tone clears 4.5:1 as badge text on its own tint, also on a selected row. Th
 
 A desktop console at 1280px and wider; nothing narrower is targeted. A collapsible sidebar (icon-only when collapsed) sits beside the content. The header is 48px tall with a bottom hairline, holding the sidebar toggle, an optional back chevron, the page title and the theme switch at the right.
 
-Content sits in a 16px padded column capped at 1440px, aligned left. Pages stack their regions with 16px gaps; related controls within a region sit 8px apart. Applications are a three-column card grid with 16px gutters. The drawer floats 8px in from the viewport's right edge at 55% of the width (at least 560px), and its graph has a fixed 384px height above the Member table.
+Content sits in a 16px padded column capped at 1440px, aligned left. Pages stack their regions with 16px gaps; related controls within a region sit 8px apart. Applications are a three-column card grid with 16px gutters. The drawer floats 8px in from the viewport's right edge at 55% of the width (at least 560px), and its graph has a fixed 384px height above the Member table. Its header holds the name to one line and the description to two.
 
 Every size and gap is a whole step of the 4px scale. Primary content aligns left; values and actions align right. Centred text is for empty states only.
 
@@ -327,6 +327,7 @@ Refined and restrained: compact 32px controls, one filled primary, quiet outline
 - **Style:** 32px tall, 1px input hairline, transparent fill (a 30% input wash in dark), 10px radius.
 - **Focus:** the border takes the ring colour and the 3px ring appears.
 - **Error:** the border turns destructive with a 20% destructive ring, and the message below is announced.
+- **Counter:** the description's character count, such as "42/200", sits at the textarea's bottom right in muted body text with tabular numerals, inside the field's border.
 
 ### Tables
 

@@ -34,7 +34,7 @@ export function DeleteApplication({ name, onDelete }: DeleteApplicationProps) {
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            Delete <span className="wrap-break-word">{name}</span>?
+            Delete <span className="wrap-anywhere">{name}</span>?
           </AlertDialogTitle>
           <AlertDialogDescription>
             The application is removed. Its resources are not affected.
