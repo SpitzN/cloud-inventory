@@ -2,7 +2,7 @@
 
 How the code is checked: the compiler, the linter, the formatter and the pre-commit gate, and why each is set up the way it is. The configuration files at the repository root are the source of truth for the exact rules. This document records the decisions and the traps behind them.
 
-The whole setup was built and run on 2026-10-02 against 76 sample files, one "bad" file per rule that must fail and "good" files that must pass. Every sample behaved as expected.
+The whole setup was built and run on 2026-10-02 against 76 sample files, one "bad" file per rule that must fail and "good" files that must pass. Every sample behaved as expected. `@shadcn/lint` was added on 2026-10-03 and verified the same way.
 
 ## The gate
 
@@ -29,7 +29,9 @@ There is no lint-staged and no CI workflow. The hook runs exactly what a develop
 | Prettier formats, ESLint lints                                                                          | Prettier's own documentation advises against running it as a lint rule. `eslint-config-prettier` is last in the config, and no formatting rule is left active.                                                                              |
 | Prettier's options are written out, at 100 columns                                                      | The file states every option the code relies on, so a Prettier major cannot restyle it. `proseWrap: "preserve"` keeps Markdown prose as written; tables are still aligned and fenced code is still formatted.                               |
 | `prettier-plugin-tailwindcss`                                                                           | Class order is formatting. The plugin sorts classes in `className`, `cn()` and `cva()`.                                                                                                                                                     |
-| A lean plugin set                                                                                       | typescript-eslint, React hooks, React refresh, accessibility and Tailwind. Large opinionated packs are left out; each of their rules would need defending.                                                                                  |
+| A lean plugin set                                                                                       | typescript-eslint, React hooks, React refresh, accessibility, Tailwind and `@shadcn/lint`. Large opinionated packs are left out; each of their rules would need defending.                                                                  |
+| `@shadcn/lint`, with two of its six rules                                                               | `no-restyle` and `require-static-classes` refuse a `className` that restyles a `src/components/ui/` primitive, which nothing else checked. Three rules repeat active `better-tailwindcss` rules and stay off, as does `no-inline-styles`.   |
+| `@shadcn/lint` 0.2.0 on ESLint 10                                                                       | Built against ESLint 9: it depends on `@eslint/core` 0.17, though only for types. It ran correctly on 10 across every sample, and `pnpm peers check` reports nothing new.                                                                   |
 | Disable comments are inert                                                                              | `noInlineConfig` is on, so a rule cannot be switched off from inside a file. A failing rule is fixed in the code.                                                                                                                           |
 | `src/components/ui/` is ignored by ESLint only                                                          | shadcn/ui files stay as generated. Prettier and the compiler still cover them, so `pnpm format` is run after adding a component.                                                                                                            |
 | `pnpm-lock.yaml` is in `.prettierignore`                                                                | Otherwise the format check flags the lockfile.                                                                                                                                                                                              |
@@ -58,6 +60,7 @@ There is no lint-staged and no CI workflow. The hook runs exactly what a develop
 | React Compiler rules                                              | `eslint-plugin-react-hooks`: state set or derived in effects, mutation, refs read during render, impure render, incompatible libraries |
 | Accessibility basics                                              | `eslint-plugin-jsx-a11y`, strict                                                                                                       |
 | Theme tokens only; no arbitrary values; no text above 24px        | `eslint-plugin-better-tailwindcss`                                                                                                     |
+| A `components/ui` primitive takes layout classes only             | `@shadcn/lint`: `no-restyle` allowing layout classes, and `require-static-classes` so that every class on a primitive can be read      |
 
 Return types are inferred. No active rule asks for explicit ones.
 
@@ -94,3 +97,7 @@ Two of the Tailwind bans are blunt:
 - **Export lists fail.** `export { a, b }` is rejected along with re-exports; write `export const`, `export function`, `export type` or `export interface` at the declaration.
 - **Callbacks nest quickly inside a store definition.** A callback inside an updater inside a store creator is already three deep. Hoist the inner helper to a module function.
 - **Angle-bracket assertions fail in the compiler too**, through `erasableSyntaxOnly`.
+- **A wrapper cannot restyle a primitive either.** Classes a wrapper adds to a primitive, and classes passed to a wrapper that forwards `className`, are checked as if written on the primitive. Margin and width pass; colour, type size, padding and shape fail. Plain elements are not checked.
+- **A class picked by key fails on a primitive.** `className={WIDTH[size]}` is reported as unreadable even when every value is a string in the same file. A ternary, a same-file constant or `cn(wide && "w-48")` passes.
+- **The plugin's messages offer a new variant in the primitive's file.** The `note` setting appends that `src/components/ui/` stays as generated.
+- **`no-inline-styles` duplicates nothing and is still off.** Its sanctioned form for a measured value, a custom property on `style`, is written with a type assertion, which lint bans.
