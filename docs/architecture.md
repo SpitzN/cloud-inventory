@@ -172,6 +172,7 @@ Features never import each other: a route under `src/app/routes/` composes them.
 | Resources toolbar                | `features/resources/components/`                    | Search, the three filters, counts, the Create button                                                   | Address codec, Selection store                   |
 | `ApplicationForm`                | `features/applications/components/`                 | Name, description and Members fields; validation; submit and cancel                                    | React Hook Form, form schema, `ResourceCombobox` |
 | `ResourceCombobox`               | `features/applications/components/`                 | A controlled chip combobox: a list of ids in, a list of ids out                                        | shadcn/ui Combobox, dataset                      |
+| `ApplicationPreview`             | `features/applications/components/`                 | The Application being created, drawn live from the form's name and Members                             | React Hook Form's `useWatch`, `ApplicationGraph` |
 | `ApplicationGraph`               | `features/applications/components/graph/`           | Draws a name and a list of Resources as a hub-and-spoke graph; can highlight one node and report hover | React Flow, ring layout                          |
 | Ring layout                      | `features/applications/lib/`                        | A pure function from a node count to positions                                                         | Nothing                                          |
 | Application drawer               | `features/applications/components/`                 | Shows one Application: graph, Members, delete                                                          | Applications store, `ApplicationGraph`           |
@@ -179,7 +180,7 @@ Features never import each other: a route under `src/app/routes/` composes them.
 Three of these are deliberately ignorant of their surroundings:
 
 - **`ApplicationGraph`** receives a name and a list of Resources. Optionally it also receives the id of the Resource to highlight and a callback for when a node is hovered, which the drawer uses to link the graph to the Member table. The creation page passes live form values; the drawer passes a saved Application. It knows about neither the form nor the store.
-- **`ApplicationForm`** receives starting values, the names already in use, and submit and cancel handlers. It does not know it is on a page, so a later Edit feature can place it in a drawer ([ADR 0005](./adr/0005-create-on-a-page-view-and-edit-in-a-drawer.md)).
+- **`ApplicationForm`** receives starting values, the names already in use, submit and cancel handlers, and a `preview` slot that it hands its `control` and renders as the form's sibling. It does not know it is on a page, so a later Edit feature can place it in a drawer ([ADR 0005](./adr/0005-create-on-a-page-view-and-edit-in-a-drawer.md)).
 - **`ResourceCombobox`** is a plain controlled input.
 
 ## Where Zod parses

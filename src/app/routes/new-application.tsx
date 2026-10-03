@@ -1,5 +1,6 @@
 import { resourcesInDefaultOrder } from "@/domain/resource-order";
 import { ApplicationForm } from "@/features/applications/components/application-form";
+import { ApplicationPreview } from "@/features/applications/components/application-preview";
 import { useCreateApplication } from "@/features/applications/hooks/use-create-application";
 import { useLeaveNewApplication } from "@/features/applications/hooks/use-leave-new-application";
 import { useApplicationsStore } from "@/features/applications/stores/applications";
@@ -13,7 +14,6 @@ export function NewApplicationPage() {
   const leave = useLeaveNewApplication();
 
   return (
-    // The right-hand column is the live preview's.
     <div className="grid grid-cols-2 gap-8">
       <ApplicationForm
         startingValues={{
@@ -27,6 +27,7 @@ export function NewApplicationPage() {
           clearSelection();
         }}
         onCancel={leave}
+        preview={(control) => <ApplicationPreview control={control} />}
       />
     </div>
   );
