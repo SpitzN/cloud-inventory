@@ -48,7 +48,7 @@ There is no lint-staged and no CI workflow. The hook runs exactly what a develop
 | No `any`, no non-null assertions, no unsafe use of untyped values | typescript-eslint's `strictTypeChecked` preset                                                                                         |
 | No `@ts-ignore`, `@ts-expect-error` or `@ts-nocheck`              | `@typescript-eslint/ban-ts-comment`                                                                                                    |
 | No nested ternaries                                               | `no-nested-ternary`                                                                                                                    |
-| No nested `if`; else-if chains and guard clauses pass             | Two `no-restricted-syntax` selectors plus `max-depth` 2                                                                                |
+| Blocks nest at most two deep; no `else` after a `return`          | `max-depth` 2 and `no-else-return` with `allowElseIf: false`, which together push a deeper branch into a guard clause or a function    |
 | Destructuring when reading from objects and arrays                | `@typescript-eslint/prefer-destructuring`                                                                                              |
 | No re-exports; names are exported where they are declared         | `no-restricted-syntax` selectors                                                                                                       |
 | No default exports, except in config files                        | `no-restricted-exports`                                                                                                                |

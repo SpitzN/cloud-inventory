@@ -11,8 +11,6 @@ import tseslint from "typescript-eslint";
 const PALETTE =
   "red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|slate|gray|zinc|neutral|stone";
 
-const NESTED_IF =
-  "No nested if: use a guard clause, else-if, or extract a function.";
 const NO_REEXPORT =
   "No re-exports: import from the file that declares the symbol.";
 
@@ -119,14 +117,6 @@ export default defineConfig(
       "no-nested-ternary": "error",
       "no-restricted-syntax": [
         "error",
-        {
-          selector: "IfStatement > BlockStatement > IfStatement",
-          message: NESTED_IF,
-        },
-        {
-          selector: "IfStatement > IfStatement.consequent",
-          message: NESTED_IF,
-        },
         { selector: "ExportAllDeclaration", message: NO_REEXPORT },
         { selector: "ExportNamedDeclaration[source]", message: NO_REEXPORT },
         {
