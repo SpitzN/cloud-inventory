@@ -19,6 +19,7 @@ This repository is public. The domain is described as "a cloud security company"
 Read these before writing or changing code under `src/`:
 
 - `.claude/rules/code-design.md`: every source file.
+- `.claude/rules/structure.md`: where a new file goes; every file under `src/`.
 - `.claude/rules/react.md` and `.claude/rules/ui.md`: components.
 
 ## Working agreements
