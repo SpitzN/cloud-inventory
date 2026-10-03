@@ -2,6 +2,7 @@ import js from "@eslint/js";
 import { plugin as shadcn } from "@shadcn/lint";
 import prettier from "eslint-config-prettier/flat";
 import tailwind from "eslint-plugin-better-tailwindcss";
+import boundaries from "eslint-plugin-boundaries";
 import jsxA11y from "eslint-plugin-jsx-a11y";
 import reactHooks from "eslint-plugin-react-hooks";
 import { reactRefresh } from "eslint-plugin-react-refresh";
@@ -14,41 +15,8 @@ const PALETTE =
 
 const NO_REEXPORT = "No re-exports: import from the file that declares the symbol.";
 
-// A later `no-restricted-imports` entry REPLACES an earlier one for the same file,
-// so every zone rebuilds the full option object through this helper.
-const restrictedImports = (...zonePatterns) => [
-  "error",
-  {
-    paths: [
-      {
-        name: "@tanstack/react-table",
-        importNames: ["Table", "Row", "Cell", "Header", "Column"],
-        message:
-          "Do not type component props as core table objects: a compiled child goes stale. Call table/row methods in the column-def render function and pass plain values.",
-      },
-    ],
-    patterns: [
-      {
-        regex: "^\\.\\./",
-        message: "Use the @/ alias instead of parent-relative imports.",
-      },
-      ...zonePatterns,
-    ],
-  },
-];
-
-const noApp = {
-  regex: "^@/app/",
-  message: "Only src/app may import from @/app.",
-};
-const noFeatures = {
-  regex: "^@/features/",
-  message: "Shared code must not import from features.",
-};
-const noApplications = {
-  regex: "^@/features/applications/",
-  message: "resources must not import from applications (applications may import from resources).",
-};
+const SIBLING_FEATURE =
+  "Features don't import each other. Move the shared fact to src/domain/, or compose both features in a route under src/app/routes/.";
 
 export default defineConfig(
   // .scratch holds local notes and a reference copy with its own tsconfig, and .claude/worktrees
@@ -139,23 +107,140 @@ export default defineConfig(
           },
         },
       ],
-      "no-restricted-imports": restrictedImports(),
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "@tanstack/react-table",
+              importNames: ["Table", "Row", "Cell", "Header", "Column"],
+              message:
+                "Do not type component props as core table objects: a compiled child goes stale. Call table/row methods in the column-def render function and pass plain values.",
+            },
+          ],
+          patterns: [
+            {
+              regex: "^\\.\\./",
+              message: "Use the @/ alias instead of parent-relative imports.",
+            },
+          ],
+        },
+      ],
     },
   },
 
-  // --- Import direction: app -> features -> (lib, components); applications -> resources, never back.
+  // --- Architecture: layers and feature slices (docs/adr/0009). An import between project
+  // files is an error unless a policy below allows it; docs/tooling.md has the table.
   {
-    files: ["src/lib/**", "src/components/**"],
-    rules: { "no-restricted-imports": restrictedImports(noFeatures, noApp) },
-  },
-  {
-    files: ["src/features/**"],
-    rules: { "no-restricted-imports": restrictedImports(noApp) },
-  },
-  {
-    files: ["src/features/resources/**"],
+    files: ["src/**/*.{ts,tsx}"],
+    plugins: { boundaries },
+    settings: {
+      "import/resolver": { typescript: { project: "./tsconfig.app.json" } },
+      "boundaries/root-path": import.meta.dirname,
+      "boundaries/legacy-templates": false,
+      // An @/ import the resolver cannot follow counts as an unknown local file, which fails lint.
+      // The default would treat it as an external package and skip every boundary check.
+      "boundaries/flag-as-external": { unresolvableAlias: false },
+      // An element is a folder: every file below it belongs to it. The first match wins, so the
+      // generated ui folder comes before the shared components folder that contains it.
+      "boundaries/elements": [
+        { type: "ui", pattern: "src/components/ui", partialMatch: false },
+        { type: "app", pattern: "src/app", partialMatch: false },
+        {
+          type: "feature",
+          pattern: [
+            "src/features/*/components",
+            "src/features/*/hooks",
+            "src/features/*/stores",
+            "src/features/*/schemas",
+            "src/features/*/lib",
+          ],
+          partialMatch: false,
+          capture: ["featureName"],
+        },
+        { type: "domain", pattern: "src/domain", partialMatch: false },
+        { type: "shared", pattern: ["src/components", "src/hooks"], partialMatch: false },
+        { type: "lib", pattern: "src/lib", partialMatch: false },
+      ],
+      // Single files cannot be elements; these categories make them known.
+      "boundaries/files": [
+        { category: "entry", pattern: "src/main.tsx" },
+        { category: "test", pattern: "src/**/*.test.{ts,tsx}" },
+        { category: "style", pattern: "src/**/*.css" },
+      ],
+    },
     rules: {
-      "no-restricted-imports": restrictedImports(noApp, noApplications),
+      "boundaries/dependencies": [
+        "error",
+        {
+          default: "disallow",
+          // Without these two, an import inside one folder (such as a test file beside its
+          // subject) and an import of a file with no element (index.css) never reach the policies.
+          checkInternals: true,
+          checkUnknownLocals: true,
+          message:
+            "This import crosses a layer boundary ({{from.element.types}} → {{to.element.types}}): see Import direction in docs/tooling.md.",
+          policies: [
+            {
+              from: { file: { categories: "entry" } },
+              allow: {
+                to: [{ element: { type: ["app", "ui"] } }, { file: { categories: "style" } }],
+              },
+            },
+            {
+              from: { element: { type: "app" } },
+              allow: {
+                to: { element: { type: ["app", "feature", "domain", "shared", "lib", "ui"] } },
+              },
+            },
+            {
+              from: { element: { type: "feature" } },
+              allow: {
+                to: [
+                  {
+                    element: {
+                      type: "feature",
+                      captured: { featureName: "{{from.element.captured.featureName}}" },
+                    },
+                  },
+                  { element: { type: ["domain", "shared", "lib", "ui"] } },
+                ],
+              },
+            },
+            {
+              from: { element: { type: "feature" } },
+              disallow: {
+                to: {
+                  element: {
+                    type: "feature",
+                    captured: { featureName: "!{{from.element.captured.featureName}}" },
+                  },
+                },
+              },
+              message: SIBLING_FEATURE,
+            },
+            {
+              from: { element: { type: "domain" } },
+              allow: { to: { element: { type: ["domain", "lib"] } } },
+            },
+            {
+              from: { element: { type: "shared" } },
+              allow: { to: { element: { type: ["shared", "lib", "ui"] } } },
+            },
+            {
+              from: { element: { type: "lib" } },
+              allow: { to: { element: { type: "lib" } } },
+            },
+            // Last, so it overrides every allow above: the last matching policy wins.
+            {
+              disallow: { to: { file: { categories: "test" } } },
+              message: "No file imports a test file.",
+            },
+          ],
+        },
+      ],
+      "boundaries/no-unknown-files": "error",
+      "boundaries/no-unknown-dependencies": "error",
     },
   },
 

@@ -60,7 +60,7 @@ There is no lint-staged and no CI workflow. The hook runs exactly what a develop
 | Destructuring when reading from objects and arrays                | `@typescript-eslint/prefer-destructuring`                                                                                              |
 | No re-exports; names are exported where they are declared         | `no-restricted-syntax` selectors                                                                                                       |
 | No default exports, except in config files                        | `no-restricted-exports`                                                                                                                |
-| Import direction                                                  | `no-restricted-imports` per folder (see below)                                                                                         |
+| Import direction                                                  | `eslint-plugin-boundaries`: layers, feature isolation, folder vocabulary (see below)                                                   |
 | Limits on tangled code                                            | `complexity` 10, `max-depth` 2, `max-params` 3, `max-nested-callbacks` 2                                                               |
 | React Compiler rules                                              | `eslint-plugin-react-hooks`: state set or derived in effects, mutation, refs read during render, impure render, incompatible libraries |
 | Accessibility basics                                              | `eslint-plugin-jsx-a11y`, strict                                                                                                       |
@@ -71,15 +71,22 @@ Return types are inferred. No active rule asks for explicit ones.
 
 ### Import direction
 
-```
-app  →  features  →  lib, components
-        applications  →  resources   (never the other way)
-```
+`eslint-plugin-boundaries` classifies each file under `src/` and allows an import between project files only when a policy allows it ([ADR 0009](./adr/0009-feature-slices-with-enforced-boundaries.md)). External packages are not governed by it.
 
-- `src/app/` may import anything.
-- `src/features/` may not import from `src/app/`.
-- `src/features/resources/` may not import from `src/features/applications/`.
-- `src/lib/` and `src/components/` may not import from features or from `src/app/`.
+| Layer     | Files                                                          | May import                                              |
+| --------- | -------------------------------------------------------------- | ------------------------------------------------------- |
+| `entry`   | `src/main.tsx`                                                 | `app`, `ui`, `index.css`                                |
+| `app`     | `src/app/**`                                                   | `app`, `feature`, `domain`, `shared`, `lib`, `ui`       |
+| `feature` | `src/features/<name>/{components,hooks,stores,schemas,lib}/**` | the same `<name>` only, `domain`, `shared`, `lib`, `ui` |
+| `domain`  | `src/domain/**`                                                | `domain`, `lib`                                         |
+| `shared`  | `src/components/**` (not `ui/`), `src/hooks/**`                | `shared`, `lib`, `ui`                                   |
+| `lib`     | `src/lib/**`                                                   | `lib`                                                   |
+| `ui`      | `src/components/ui/**`                                         | not linted                                              |
+
+- No file imports a test file.
+- A file outside every layer fails `boundaries/no-unknown-files`; this is what holds a feature to its five folders.
+- An import that resolves to no layer fails `boundaries/no-unknown-dependencies`.
+- Parent-relative imports (`../`) stay banned by `no-restricted-imports`.
 
 ## What lint cannot enforce
 
@@ -90,6 +97,8 @@ These stay review rules in `.claude/rules/`.
 - A compiled child component that reads from a stable object and goes stale. The config bans importing TanStack Table's core object types as a partial guard.
 - Props destructured in the component signature.
 - A variable declared and immediately returned.
+- Nesting deeper than one family folder inside a feature's `components/`, and a hook file not named `use-*.ts`: the plugin classifies folders, not file names.
+- A route page that holds business logic, and a `domain/` file only one feature uses.
 
 Two of the Tailwind bans are blunt:
 
@@ -114,3 +123,8 @@ Two of the Tailwind bans are blunt:
 - **The plugin's messages offer a new variant in the primitive's file.** The `note` setting appends that `src/components/ui/` stays as generated.
 - **A generated file can fail the project's compiler options.** Of 26 files generated on 2026-10-03, `scroll-area.tsx` failed `noUnusedLocals` and `sonner.tsx` failed `exactOptionalPropertyTypes`. Both pass under `strict`, which is all `tsconfig.ui.json` asks. A generated file that fails a check even so is a question for the owner; it is not edited.
 - **`shadcn add` stops at a prompt when a file it writes already exists.** A component that depends on an existing one, as the sidebar does on the button, needs `--overwrite`.
+- **`eslint-plugin-boundaries` skips an `@/` import it cannot resolve.** By default such an import counts as an external package, and the dependencies rule ignores external packages: without `eslint-import-resolver-typescript`, every boundary would pass silently. `flag-as-external` with `unresolvableAlias: false` makes it an unknown local file instead, which fails `no-unknown-dependencies`.
+- **The dependencies rule skips two kinds of import unless told otherwise:** an import inside one element folder, and an import of a file that belongs to no element. Without `checkInternals` and `checkUnknownLocals`, a file could import the test beside it, and `index.css` would be unchecked.
+- **In v7 an element is a folder, never a file.** Patterns get `/**/*` appended, so a file pattern matches nothing. Single files (`main.tsx`, `index.css`, tests) are classified with `boundaries/files` categories, and lint cannot check a file's name or its depth inside an element.
+- **A custom boundaries message loses its final full stop** in ESLint's output. Search for a message without it.
+- **`unrs-resolver` asks to run an install script** when `eslint-import-resolver-typescript` is added. Its native binding arrives as a prebuilt optional package, so `pnpm-workspace.yaml` sets `allowBuilds.unrs-resolver: false`.
