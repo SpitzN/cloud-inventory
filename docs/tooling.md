@@ -41,9 +41,9 @@ There is no lint-staged and no CI workflow. The hook runs exactly what a develop
 | Prettier still formats `src/components/ui/`                                                             | `pnpm format` is run after adding a component. Formatting is the one change a generated file takes.                                                                                                                                         |
 | `pnpm-lock.yaml` is in `.prettierignore`                                                                | Otherwise the format check flags the lockfile.                                                                                                                                                                                              |
 | Stricter compiler options than the template, for project code                                           | `strict`, `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes`, in `tsconfig.app.json`.                                                                                                                                              |
-| The `@/` alias for every import outside the folder                                                      | The import-direction rules match on `@/features/…` and `@/app/…`. Same-folder `./` imports are allowed; `../` is not.                                                                                                                       |
+| The `@/` alias for every import outside the folder                                                      | One spelling for each file, so a file moves without its importers' `../` chains changing. The boundary rules resolve files, so they see `./` and `@/` imports alike. Same-folder `./` imports are allowed; `../` is not.                    |
 | `.scratch/` and `.claude/worktrees/` are git-ignored, ignored by ESLint, and outside Vitest's `include` | Prettier reads `.gitignore`; ESLint and Vitest do not. The first holds local notes and a reference copy with its own tsconfig and tests; the second holds checkouts of this repository made by agents, which the checks must not walk into. |
-| `pnpm-workspace.yaml` holds only `allowBuilds`                                                          | pnpm refuses a dependency's build script unless it is allowed; esbuild's is, so the install is warning-free. There is no workspace.                                                                                                         |
+| `pnpm-workspace.yaml` holds only `allowBuilds`                                                          | pnpm refuses a dependency's build script unless it is listed; esbuild's is allowed and `unrs-resolver`'s refused (see the traps), so the install is warning-free. There is no workspace.                                                    |
 | The root `tsconfig.json` repeats `paths`                                                                | Written by shadcn init, which reads the alias from the root file when adding a component. `tsc -b` ignores it, since that file lists no sources.                                                                                            |
 | `passWithNoTests`                                                                                       | `vitest run` exits 1 when no test file exists, which would fail the gate before the first tested seam lands. Harmless once tests exist.                                                                                                     |
 | `cn` is imported from the `cn` package                                                                  | shadcn/ui's generated `src/lib/utils.ts` only re-exports it, which lint bans, and the generated components import the package directly. The file is not kept; `shadcn add` does not recreate it.                                            |
@@ -73,18 +73,18 @@ Return types are inferred. No active rule asks for explicit ones.
 
 `eslint-plugin-boundaries` classifies each file under `src/` and allows an import between project files only when a policy allows it ([ADR 0009](./adr/0009-feature-slices-with-enforced-boundaries.md)). External packages are not governed by it.
 
-| Layer     | Files                                                          | May import                                              |
-| --------- | -------------------------------------------------------------- | ------------------------------------------------------- |
-| `entry`   | `src/main.tsx`                                                 | `app`, `ui`, `index.css`                                |
-| `app`     | `src/app/**`                                                   | `app`, `feature`, `domain`, `shared`, `lib`, `ui`       |
-| `feature` | `src/features/<name>/{components,hooks,stores,schemas,lib}/**` | the same `<name>` only, `domain`, `shared`, `lib`, `ui` |
-| `domain`  | `src/domain/**`                                                | `domain`, `lib`                                         |
-| `shared`  | `src/components/**` (not `ui/`), `src/hooks/**`                | `shared`, `lib`, `ui`                                   |
-| `lib`     | `src/lib/**`                                                   | `lib`                                                   |
-| `ui`      | `src/components/ui/**`                                         | not linted                                              |
+| Layer     | Files                                                                           | May import                                              |
+| --------- | ------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `entry`   | `src/main.tsx`                                                                  | `src/app/app.tsx`, `ui`, `index.css`                    |
+| `app`     | `src/app/app.tsx`, `src/app/{routes,shell/components,shell/hooks,shell/lib}/**` | `app`, `feature`, `domain`, `shared`, `lib`, `ui`       |
+| `feature` | `src/features/<name>/{components,hooks,stores,schemas,lib}/**`                  | the same `<name>` only, `domain`, `shared`, `lib`, `ui` |
+| `domain`  | `src/domain/**`                                                                 | `domain`, `lib`                                         |
+| `shared`  | `src/components/**` (not `ui/`), `src/hooks/**`                                 | `shared`, `lib`, `ui`                                   |
+| `lib`     | `src/lib/**`                                                                    | `lib`                                                   |
+| `ui`      | `src/components/ui/**`                                                          | not linted                                              |
 
 - No file imports a test file.
-- A file outside every layer fails `boundaries/no-unknown-files`; this is what holds a feature to its five folders.
+- A file outside every layer fails `boundaries/no-unknown-files`; this is what holds a feature to its five folders and `src/app/` to `app.tsx`, `routes/` and the shell's `components/`, `hooks/` and `lib/`. A test file counts only in those folders, so a test anywhere else fails too.
 - An import that resolves to no layer fails `boundaries/no-unknown-dependencies`.
 - Parent-relative imports (`../`) stay banned by `no-restricted-imports`.
 
@@ -98,6 +98,8 @@ These stay review rules in `.claude/rules/`.
 - Props destructured in the component signature.
 - A variable declared and immediately returned.
 - Nesting deeper than one family folder inside a feature's `components/`, and a hook file not named `use-*.ts`: the plugin classifies folders, not file names.
+- That `src/domain/`, `src/components/`, `src/hooks/`, `src/lib/` and the shell's three folders stay flat: each is one element, so a subfolder inside it passes.
+- That a `components/` folder holds only `.tsx` components and a `lib/` folder only pure code.
 - A route page that holds business logic, and a `domain/` file only one feature uses.
 
 Two of the Tailwind bans are blunt:
@@ -128,3 +130,5 @@ Two of the Tailwind bans are blunt:
 - **In v7 an element is a folder, never a file.** Patterns get `/**/*` appended, so a file pattern matches nothing. Single files (`main.tsx`, `index.css`, tests) are classified with `boundaries/files` categories, and lint cannot check a file's name or its depth inside an element.
 - **A custom boundaries message loses its final full stop** in ESLint's output. Search for a message without it.
 - **`unrs-resolver` asks to run an install script** when `eslint-import-resolver-typescript` is added. Its native binding arrives as a prebuilt optional package, so `pnpm-workspace.yaml` sets `allowBuilds.unrs-resolver: false`.
+- **A `.d.ts` file under `src/` has no layer** and fails `no-unknown-files`. None is needed today (`tsconfig.app.json` sets `types: ["vite/client"]`); a later declaration file needs a `boundaries/files` category first.
+- **A layer has no name when a file has no element.** The general boundaries message prints the file path in that case (`src/app/app.tsx → src/main.tsx`), through a Handlebars `{{#if}}` in the message.

@@ -9,7 +9,7 @@ Lint enforces the layers and the folder names (`docs/tooling.md`, Import directi
 
 ## Where a new file goes
 
-1. A route page, or anything that connects two features: `src/app/routes/`. The router and providers: `src/app/app.tsx`. The shell: `src/app/shell/`.
+1. A route page, or anything that connects two features: `src/app/routes/`. The router and providers: `src/app/app.tsx`. The shell: `src/app/shell/`, with the same vocabulary as a feature: `components/`, `hooks/`, `lib/`.
 2. Something only one feature uses: that feature, in the folder named by what the file is.
    - `components/`: a `.tsx` component. A family of related components may share one subfolder, such as `components/graph/`; nothing nests deeper.
    - `hooks/`: a hook, named `use-<what>.ts`.
