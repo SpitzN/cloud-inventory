@@ -3,7 +3,6 @@ import {
   createSortedRowModel,
   functionalUpdate,
   rowSortingFeature,
-  sortFn_text,
   tableFeatures,
   useTable,
   type SortDirection,
@@ -20,9 +19,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { criticalityRank, criticalityTone } from "@/domain/criticality";
+import { criticalityTone } from "@/domain/criticality";
 import { resources } from "@/domain/dataset";
 import type { Resource } from "@/domain/resource";
+import {
+  compareResourcesByCriticalityThenOpenIssues,
+  compareResourcesByName,
+} from "@/domain/resource-order";
 import {
   parseResourcesAddress,
   serialiseResourcesAddress,
@@ -31,7 +34,6 @@ import {
 const features = tableFeatures({
   rowSortingFeature,
   sortedRowModel: createSortedRowModel(),
-  sortFns: { text: sortFn_text },
 });
 
 const columnHelper = createColumnHelper<typeof features, Resource>();
@@ -39,7 +41,7 @@ const columnHelper = createColumnHelper<typeof features, Resource>();
 const columns = columnHelper.columns([
   columnHelper.accessor("name", {
     header: "Name",
-    sortFn: "text",
+    sortFn: ({ original: a }, { original: b }) => compareResourcesByName(a, b),
     // On a plain element: a table cell in an auto-width table grows past its max width.
     cell: ({ getValue }) => (
       <span title={getValue()} className="block max-w-48 truncate">
@@ -63,9 +65,7 @@ const columns = columnHelper.columns([
     sortDescFirst: true,
     // Open issues break ties so that most critical first is the default order of Resources
     // (compareResourcesInDefaultOrder); rows equal on both stay in name order.
-    sortFn: ({ original: a }, { original: b }) =>
-      criticalityRank(a.criticality) - criticalityRank(b.criticality) ||
-      a.openIssues - b.openIssues,
+    sortFn: ({ original: a }, { original: b }) => compareResourcesByCriticalityThenOpenIssues(a, b),
     cell: ({ getValue }) => <Badge variant={criticalityTone(getValue())}>{getValue()}</Badge>,
   }),
   columnHelper.accessor("openIssues", {
@@ -92,7 +92,7 @@ function SortIndicator({ direction }: { direction: SortDirection | false }) {
 }
 
 // The sorted row model falls back to data order for ties, so every sort breaks ties by name.
-const rowsByName = resources.toSorted((a, b) => a.name.localeCompare(b.name));
+const rowsByName = resources.toSorted(compareResourcesByName);
 
 export function ResourcesTable() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -130,7 +130,7 @@ export function ResourcesTable() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="-mx-2.5"
+                    className="-mx-2"
                     onClick={header.column.getToggleSortingHandler()}
                   >
                     <table.FlexRender header={header} />

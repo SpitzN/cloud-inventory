@@ -8,7 +8,7 @@ interface ResourcesAddress {
 
 const DEFAULT_SORT = { id: "criticality", desc: true } satisfies ColumnSort;
 
-/** Most critical first; the Criticality column breaks ties by open issues, then name. */
+/** The sort when the address names none: Criticality, most critical first. */
 export const DEFAULT_SORTING: SortingState = [DEFAULT_SORT];
 
 /** Reads the table state from the query string. Whatever does not parse falls back to its default. */
