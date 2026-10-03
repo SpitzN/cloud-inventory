@@ -32,7 +32,7 @@ The UI browses Resources, groups a Selection into a new Application, and views t
 
 ### Not in this version
 
-These are named in the README under "what I'd do next". The full list is in [What would come next](#what-would-come-next).
+These are listed in the README under "What would come next". The full list is in [What would come next](#what-would-come-next).
 
 - Editing an Application.
 - A Resource details view showing owner, tags and region.
@@ -44,7 +44,7 @@ These are named in the README under "what I'd do next". The full list is in [Wha
 
 ### Phases
 
-This document covers **phase 1**: the complete, working product on shadcn/ui's default theme. A **visual design pass** is a separate, later phase with its own design work. Phase 1 must not make that pass harder.
+The product was built first, complete and working, on shadcn/ui's default theme. A visual design pass followed, through the theme tokens; it is recorded in [DESIGN.md](../DESIGN.md).
 
 ## Shell
 

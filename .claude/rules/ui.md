@@ -39,5 +39,5 @@ Layout per screen is in `docs/wireframes.md` and behaviour in `docs/product.md`.
 
 ## Tokens
 
-- Every colour is a theme token, defined for light and dark. The visual design pass changes tokens, and components stay as they are.
+- Every colour is a theme token, defined for light and dark. A change to the look goes through the tokens, and components stay as they are.
 - One font family.
