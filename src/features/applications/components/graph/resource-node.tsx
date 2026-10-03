@@ -4,7 +4,7 @@ import { criticalityTone } from "@/domain/criticality";
 import type { Resource } from "@/domain/resource";
 import { CentreHandle } from "@/features/applications/components/graph/centre-handle";
 
-export type ResourceGraphNode = Node<{ resource: Resource }, "resource">;
+export type ResourceGraphNode = Node<{ resource: Resource; isHighlighted: boolean }, "resource">;
 
 const criticalityDot = cva("size-2 shrink-0 rounded-full", {
   variants: {
@@ -17,12 +17,27 @@ const criticalityDot = cva("size-2 shrink-0 rounded-full", {
   },
 });
 
-/** One Member: Criticality dot, name, Type and Provider, and the open issue count. */
-export function ResourceNode({ data: { resource } }: NodeProps<ResourceGraphNode>) {
+const resourceNodeBox = cva(
+  "flex size-full items-center gap-2 rounded-lg border bg-card px-3 text-card-foreground",
+  {
+    variants: {
+      highlighted: {
+        true: "border-primary ring-3 ring-ring/50",
+        false: "",
+      },
+    },
+  },
+);
+
+/**
+ * One Member: Criticality dot, name, Type and Provider, and the open issue count. A highlighted
+ * node is outlined, for a caller linking it to another view of the same Resource.
+ */
+export function ResourceNode({ data: { resource, isHighlighted } }: NodeProps<ResourceGraphNode>) {
   const { name, type, provider, criticality, openIssues } = resource;
 
   return (
-    <div className="flex size-full items-center gap-2 rounded-lg border bg-card px-3 text-card-foreground">
+    <div className={resourceNodeBox({ highlighted: isHighlighted })}>
       <span
         role="img"
         aria-label={`${criticality} criticality`}

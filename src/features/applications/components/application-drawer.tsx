@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
 import { XIcon } from "lucide-react";
 import { IconControl } from "@/components/icon-control";
@@ -36,6 +36,8 @@ export function ApplicationDrawer() {
   const remove = useApplicationsStore((state) => state.remove);
   const isMissing = application === undefined;
   const isDeleting = useRef(false);
+  // The Member under the pointer or keyboard focus, in either the graph or the table.
+  const [highlightedResourceId, setHighlightedResourceId] = useState<string>();
 
   // Opened from a card, the previous entry is the Applications page: going back to it keeps Back
   // from reopening the drawer.
@@ -105,13 +107,22 @@ export function ApplicationDrawer() {
             data-base-ui-swipe-ignore
             className="h-96 shrink-0 overflow-hidden rounded-lg border"
           >
-            <ApplicationGraph name={name} resources={members} />
+            <ApplicationGraph
+              name={name}
+              resources={members}
+              highlightedResourceId={highlightedResourceId}
+              onResourceHover={setHighlightedResourceId}
+            />
           </div>
           <section className="flex flex-col gap-2" aria-labelledby="member-resources">
             <h3 id="member-resources" className="font-medium">
               Member resources · <span className="tabular-nums">{members.length}</span>
             </h3>
-            <MemberTable resources={members} />
+            <MemberTable
+              resources={members}
+              highlightedResourceId={highlightedResourceId}
+              onResourceHover={setHighlightedResourceId}
+            />
           </section>
           <DeleteApplication
             name={name}
