@@ -5,6 +5,7 @@ import {
   compareResourcesByCriticalityThenOpenIssues,
   compareResourcesByName,
   compareResourcesInDefaultOrder,
+  resourceIdsInDefaultOrder,
 } from "@/domain/resource-order";
 
 describe("compareResourcesInDefaultOrder", () => {
@@ -66,5 +67,24 @@ describe("compareResourcesByCriticalityThenOpenIssues", () => {
     );
 
     expect(reversedThenByName).toEqual(resources.toSorted(compareResourcesInDefaultOrder));
+  });
+});
+
+describe("resourceIdsInDefaultOrder", () => {
+  it("lists the ids in the default order of their Resources", () => {
+    // payments-api-dev, ci-deploy-role, payments-api-prod
+    expect(resourceIdsInDefaultOrder(new Set(["r-003", "r-005", "r-001"]))).toEqual([
+      "r-001",
+      "r-005",
+      "r-003",
+    ]);
+  });
+
+  it("leaves out an id with no Resource", () => {
+    expect(resourceIdsInDefaultOrder(["r-999", "r-001"])).toEqual(["r-001"]);
+  });
+
+  it("lists nothing for no ids", () => {
+    expect(resourceIdsInDefaultOrder([])).toEqual([]);
   });
 });
