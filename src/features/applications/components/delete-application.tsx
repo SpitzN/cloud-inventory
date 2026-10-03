@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 
 interface DeleteApplicationProps {
   name: string;
-  /** Runs once, on "Delete". The dialog stays open, its buttons disabled, until it settles. */
+  /** Runs once, on "Delete", and is expected to unmount the dialog; its buttons stay disabled. */
   onDelete: () => Promise<void>;
 }
 

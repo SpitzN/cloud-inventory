@@ -54,11 +54,11 @@ export function ApplicationDrawer() {
     // On a first load this effect runs before the shell's toaster has subscribed, and a toast added
     // then is lost; the toaster is subscribed once the navigation has settled. A fixed id makes
     // Strict Mode's second run update this toast instead of adding another.
-    const leave = async () => {
+    const reportNotFound = async () => {
       await navigate("/applications", { replace: true });
       toast.add({ id: "application-not-found", title: "Application not found" });
     };
-    void leave();
+    void reportNotFound();
   }, [isMissing, navigate]);
 
   if (isMissing) {

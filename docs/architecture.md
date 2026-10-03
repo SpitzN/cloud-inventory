@@ -210,7 +210,7 @@ The static dataset is typed by annotation, not parsed at runtime. One test runs 
 
 **View.** The drawer reads the id from the route, finds the Application in the store, resolves its `resourceIds` to Resources through the dataset lookup, and passes the name and Resources to `ApplicationGraph` and the Member table.
 
-**Delete.** The drawer asks for confirmation, removes the Application from the store, goes to `/applications`, and a toast confirms.
+**Delete.** The drawer asks for confirmation, goes to `/applications`, then removes the Application from the store, and a toast confirms. Removing it first would leave the drawer open on a missing id, which it reports as "Application not found".
 
 ## Saving and loading
 
