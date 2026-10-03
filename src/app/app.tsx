@@ -1,11 +1,67 @@
+import { ThemeProvider } from "next-themes";
+import { createBrowserRouter, Navigate, RouterProvider } from "react-router";
+import { ApplicationsPage } from "@/app/routes/applications";
+import { NewApplicationPage } from "@/app/routes/new-application";
+import { NotFoundPage } from "@/app/routes/not-found";
+import { ResourcesPage } from "@/app/routes/resources";
+import { ErrorScreen } from "@/app/shell/error-screen";
+import type { RouteHeaderDeclaration } from "@/app/shell/route-header";
+import { Shell } from "@/app/shell/shell";
+import { ApplicationDrawer } from "@/features/applications/components/application-drawer";
+
+const router = createBrowserRouter([
+  { path: "/", element: <Navigate to="/resources" replace /> },
+  {
+    element: <Shell />,
+    // An error in the shell itself, such as a route header that does not parse, takes the shell
+    // with it; the error screen is shown on its own.
+    errorElement: <ErrorScreen />,
+    children: [
+      {
+        // Pathless, so an error replaces only the page content and the shell stays.
+        errorElement: <ErrorScreen />,
+        children: [
+          {
+            path: "resources",
+            element: <ResourcesPage />,
+            handle: { title: "Resources" } satisfies RouteHeaderDeclaration,
+          },
+          {
+            path: "applications",
+            element: <ApplicationsPage />,
+            handle: { title: "Applications" } satisfies RouteHeaderDeclaration,
+            // No handle: the drawer keeps the Applications header.
+            children: [{ path: ":id", element: <ApplicationDrawer /> }],
+          },
+          {
+            path: "applications/new",
+            element: <NewApplicationPage />,
+            handle: {
+              title: "New application",
+              backChevron: true,
+            } satisfies RouteHeaderDeclaration,
+          },
+          {
+            path: "*",
+            element: <NotFoundPage />,
+            handle: { title: "Page not found" } satisfies RouteHeaderDeclaration,
+          },
+        ],
+      },
+    ],
+  },
+]);
+
 export function App() {
   return (
-    <main className="flex min-h-svh flex-col items-center justify-center gap-2">
-      <h1 className="text-2xl font-semibold">Cloud Inventory</h1>
-      <p className="text-sm text-muted-foreground">
-        Browse cloud Resources, group a Selection into an Application, and view Applications as a
-        graph.
-      </p>
-    </main>
+    // React never runs a script rendered on the client, and logs an error for one unless it is a
+    // data block. next-themes applies the theme from an effect here, so its inline script is inert.
+    <ThemeProvider
+      attribute="class"
+      disableTransitionOnChange
+      scriptProps={{ type: "application/json" }}
+    >
+      <RouterProvider router={router} />
+    </ThemeProvider>
   );
 }
