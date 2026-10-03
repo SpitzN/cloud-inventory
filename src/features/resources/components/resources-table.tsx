@@ -82,8 +82,8 @@ const columns = columnHelper.columns([
       <Checkbox
         aria-label={`Select ${row.original.name}`}
         checked={row.getIsSelected()}
-        onCheckedChange={() => {
-          useSelectionStore.getState().toggle(row.id);
+        onCheckedChange={(checked) => {
+          row.toggleSelected(checked);
         }}
       />
     ),
@@ -184,7 +184,6 @@ export function ResourcesTable() {
   const filters = readColumnFilters(columnFilters);
   const selectedIds = useSelectionStore((state) => state.ids);
   const setSelectedIds = useSelectionStore((state) => state.setMany);
-  const clearSelection = useSelectionStore((state) => state.clear);
   const rowSelection = Object.fromEntries(Array.from(selectedIds, (id) => [id, true] as const));
 
   function writeAddress(address: ResourcesAddress) {
@@ -232,9 +231,7 @@ export function ResourcesTable() {
         onClearFilters={clearFilters}
         shownCount={rows.length}
         totalCount={rowsByName.length}
-        selectedCount={selectedIds.size}
         hiddenSelectedCount={selectedIds.size - visibleSelectedCount}
-        onClearSelection={clearSelection}
       >
         {VALUE_FILTERS.map(({ columnId, title, options }) => {
           const column = table.getColumn(columnId);

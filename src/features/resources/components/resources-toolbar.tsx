@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useSelectionStore } from "@/features/resources/stores/selection";
 
 /**
  * The bar above the Resources table: the search, the filters given as children, "Clear filters"
@@ -15,9 +16,7 @@ export function ResourcesToolbar({
   onClearFilters,
   shownCount,
   totalCount,
-  selectedCount,
   hiddenSelectedCount,
-  onClearSelection,
   children,
 }: {
   search: string;
@@ -26,12 +25,13 @@ export function ResourcesToolbar({
   onClearFilters: () => void;
   shownCount: number;
   totalCount: number;
-  selectedCount: number;
   /** Ticked Resources the search and filters hide. */
   hiddenSelectedCount: number;
-  onClearSelection: () => void;
   children: ReactNode;
 }) {
+  const selectedCount = useSelectionStore((state) => state.ids.size);
+  const clearSelection = useSelectionStore((state) => state.clear);
+
   return (
     <div className="flex items-center gap-2">
       <Input
@@ -60,7 +60,7 @@ export function ResourcesToolbar({
               {selectedCount} selected
               {hiddenSelectedCount > 0 && ` (${hiddenSelectedCount} hidden)`}
             </span>
-            <Button variant="ghost" onClick={onClearSelection}>
+            <Button variant="ghost" onClick={clearSelection}>
               Clear
             </Button>
           </>
