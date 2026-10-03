@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ApplicationSchema } from "@/domain/application";
-import { exampleApplication, resourceById, resources } from "@/domain/dataset";
+import { exampleApplication, resourceById, resources, resourcesWithIds } from "@/domain/dataset";
 import { ResourceSchema } from "@/domain/resource";
 
 describe("the dataset", () => {
@@ -21,6 +21,13 @@ describe("the dataset", () => {
   it("finds a Resource by its id, and nothing for an unknown id", () => {
     expect(resourceById("r-005")?.name).toBe("ci-deploy-role");
     expect(resourceById("r-999")).toBeUndefined();
+  });
+
+  it("finds Resources by their ids in the order given, leaving out unknown ids", () => {
+    expect(resourcesWithIds(["r-005", "r-999", "r-001"]).map(({ name }) => name)).toEqual([
+      "ci-deploy-role",
+      "payments-api-prod",
+    ]);
   });
 
   it("holds an example Application that passes its schema and whose Members all exist", () => {

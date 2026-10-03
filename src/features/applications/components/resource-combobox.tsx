@@ -12,7 +12,7 @@ import {
   useComboboxAnchor,
 } from "@/components/ui/combobox";
 import { criticalityTone } from "@/domain/criticality";
-import { resourceById, resources } from "@/domain/dataset";
+import { resources, resourcesWithIds } from "@/domain/dataset";
 import type { Resource } from "@/domain/resource";
 import { compareResourcesInDefaultOrder } from "@/domain/resource-order";
 
@@ -32,7 +32,7 @@ export function ResourceCombobox({
   onValueChange: (value: string[]) => void;
 } & Pick<ComponentProps<"input">, "id" | "ref" | "aria-invalid" | "aria-describedby">) {
   const anchor = useComboboxAnchor();
-  const members = value.flatMap((id) => resourceById(id) ?? []);
+  const members = resourcesWithIds(value);
 
   return (
     <Combobox
@@ -59,7 +59,9 @@ export function ResourceCombobox({
         <ComboboxList>
           {(resource: Resource) => (
             <ComboboxItem key={resource.id} value={resource}>
-              <span className="truncate">{resource.name}</span>
+              <span className="truncate" title={resource.name}>
+                {resource.name}
+              </span>
               <span className="ml-auto text-muted-foreground">{resource.type}</span>
               <Badge variant={criticalityTone(resource.criticality)}>{resource.criticality}</Badge>
             </ComboboxItem>

@@ -5,7 +5,7 @@ import {
   compareResourcesByCriticalityThenOpenIssues,
   compareResourcesByName,
   compareResourcesInDefaultOrder,
-  resourceIdsInDefaultOrder,
+  resourcesInDefaultOrder,
 } from "@/domain/resource-order";
 
 describe("compareResourcesInDefaultOrder", () => {
@@ -70,10 +70,12 @@ describe("compareResourcesByCriticalityThenOpenIssues", () => {
   });
 });
 
-describe("resourceIdsInDefaultOrder", () => {
-  it("lists the ids in the default order of their Resources", () => {
+describe("resourcesInDefaultOrder", () => {
+  const ids = (list: readonly Resource[]) => list.map(({ id }) => id);
+
+  it("lists the Resources in the default order", () => {
     // payments-api-dev, ci-deploy-role, payments-api-prod
-    expect(resourceIdsInDefaultOrder(new Set(["r-003", "r-005", "r-001"]))).toEqual([
+    expect(ids(resourcesInDefaultOrder(new Set(["r-003", "r-005", "r-001"])))).toEqual([
       "r-001",
       "r-005",
       "r-003",
@@ -81,10 +83,10 @@ describe("resourceIdsInDefaultOrder", () => {
   });
 
   it("leaves out an id with no Resource", () => {
-    expect(resourceIdsInDefaultOrder(["r-999", "r-001"])).toEqual(["r-001"]);
+    expect(ids(resourcesInDefaultOrder(["r-999", "r-001"]))).toEqual(["r-001"]);
   });
 
   it("lists nothing for no ids", () => {
-    expect(resourceIdsInDefaultOrder([])).toEqual([]);
+    expect(resourcesInDefaultOrder([])).toEqual([]);
   });
 });

@@ -1,4 +1,4 @@
-import { resourceIdsInDefaultOrder } from "@/domain/resource-order";
+import { resourcesInDefaultOrder } from "@/domain/resource-order";
 import { ApplicationForm } from "@/features/applications/components/application-form";
 import { useCreateApplication } from "@/features/applications/hooks/use-create-application";
 import { useLeaveNewApplication } from "@/features/applications/hooks/use-leave-new-application";
@@ -19,7 +19,7 @@ export function NewApplicationPage() {
         startingValues={{
           name: "",
           description: "",
-          resourceIds: resourceIdsInDefaultOrder(selectedIds),
+          resourceIds: resourcesInDefaultOrder(selectedIds).map(({ id }) => id),
         }}
         namesInUse={applications.map(({ name }) => name)}
         onSubmit={(application) => {
