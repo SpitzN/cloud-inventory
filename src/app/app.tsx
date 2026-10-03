@@ -3,11 +3,11 @@ import { createBrowserRouter, Navigate, RouterProvider } from "react-router";
 import { ApplicationsPage } from "@/app/routes/applications";
 import { NewApplicationPage } from "@/app/routes/new-application";
 import { NotFoundPage } from "@/app/routes/not-found";
-import { ResourcesPage } from "@/app/routes/resources";
 import { ErrorScreen } from "@/app/shell/error-screen";
 import type { RouteHeaderDeclaration } from "@/app/shell/route-header";
 import { Shell } from "@/app/shell/shell";
 import { ApplicationDrawer } from "@/features/applications/components/application-drawer";
+import { ResourcesTable } from "@/features/resources/components/resources-table";
 
 const router = createBrowserRouter([
   { path: "/", element: <Navigate to="/resources" replace /> },
@@ -23,7 +23,7 @@ const router = createBrowserRouter([
         children: [
           {
             path: "resources",
-            element: <ResourcesPage />,
+            element: <ResourcesTable />,
             handle: { title: "Resources" } satisfies RouteHeaderDeclaration,
           },
           {
