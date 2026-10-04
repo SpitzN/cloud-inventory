@@ -9,6 +9,7 @@ paths:
 
 - Build screens by composing small parts, in the style of shadcn/ui: a compound component exposes its parts and the caller arranges them.
 - Vary a component through `children` and composed parts before adding a prop. A component collecting boolean props is split into parts.
+- `children` is the component's own body. Content placed in one region of a component that has a body of its own is a named slot prop, such as `actions` on `ResourcesTable` and `ResourcesToolbar`.
 - A wrapper around a `components/ui` primitive adds something the primitive lacks, such as domain meaning or fixed behaviour. Otherwise the primitive is used directly.
 - Base UI variants compose with the `render` prop.
 - Class names are merged with `cn`. A look picked by a prop is a `cva` variant, never a chain of `prop === "x" && "..."` conditions inside `cn`.

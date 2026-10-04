@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
-import { Link } from "react-router";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSelectionStore } from "@/features/resources/stores/selection";
 
@@ -13,6 +12,7 @@ export function ResourcesToolbar({
   totalCount,
   hiddenSelectedCount,
   children,
+  actions,
 }: {
   search: string;
   onSearchChange: (search: string) => void;
@@ -22,6 +22,7 @@ export function ResourcesToolbar({
   totalCount: number;
   hiddenSelectedCount: number;
   children: ReactNode;
+  actions: ReactNode;
 }) {
   const selectedCount = useSelectionStore((state) => state.ids.size);
   const clearSelection = useSelectionStore((state) => state.clear);
@@ -61,9 +62,7 @@ export function ResourcesToolbar({
             </Button>
           </>
         )}
-        <Link to="/applications/new" className={buttonVariants()}>
-          Create application
-        </Link>
+        {actions}
       </div>
     </div>
   );
