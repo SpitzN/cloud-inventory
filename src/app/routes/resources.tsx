@@ -4,10 +4,12 @@ import { ResourcesTable } from "@/features/resources/components/resources-table"
 
 export function ResourcesPage() {
   return (
-    <ResourcesTable>
-      <Link to="/applications/new" className={buttonVariants()}>
-        Create application
-      </Link>
-    </ResourcesTable>
+    <ResourcesTable
+      actions={
+        <Link to="/applications/new" className={buttonVariants()}>
+          Create application
+        </Link>
+      }
+    />
   );
 }

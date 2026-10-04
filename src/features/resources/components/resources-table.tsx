@@ -180,7 +180,7 @@ function NoMatchesRow({ onClearFilters }: { onClearFilters: () => void }) {
 // The sorted row model falls back to data order for ties, so every sort breaks ties by name.
 const rowsByName = resources.toSorted(compareResourcesByName);
 
-export function ResourcesTable({ children }: { children: ReactNode }) {
+export function ResourcesTable({ actions }: { actions: ReactNode }) {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { sorting, columnFilters } = parseResourcesAddress(searchParams);
@@ -235,7 +235,7 @@ export function ResourcesTable({ children }: { children: ReactNode }) {
         shownCount={rows.length}
         totalCount={rowsByName.length}
         hiddenSelectedCount={selectedIds.size - visibleSelectedCount}
-        actions={children}
+        actions={actions}
       >
         {VALUE_FILTERS.map(({ columnId, title, options }) => {
           const column = table.getColumn(columnId);
