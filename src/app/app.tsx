@@ -3,10 +3,10 @@ import { createBrowserRouter, Navigate } from "react-router";
 // The DOM build, which carries out a navigation's `flushSync` option.
 import { RouterProvider } from "react-router/dom";
 import { NotFoundPage } from "@/app/routes/not-found";
+import { ResourcesPage } from "@/app/routes/resources";
 import { ErrorScreen } from "@/app/shell/components/error-screen";
 import { Shell } from "@/app/shell/components/shell";
 import type { RouteHeaderDeclaration } from "@/app/shell/lib/route-header";
-import { ResourcesTable } from "@/features/resources/components/resources-table";
 
 const router = createBrowserRouter([
   { path: "/", element: <Navigate to="/resources" replace /> },
@@ -22,7 +22,7 @@ const router = createBrowserRouter([
         children: [
           {
             path: "resources",
-            element: <ResourcesTable />,
+            element: <ResourcesPage />,
             handle: { title: "Resources" } satisfies RouteHeaderDeclaration,
           },
           {

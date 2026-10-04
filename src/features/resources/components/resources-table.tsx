@@ -14,6 +14,7 @@ import {
   type SortDirection,
 } from "@tanstack/react-table";
 import { ArrowDownIcon, ArrowUpIcon } from "lucide-react";
+import type { ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -179,7 +180,7 @@ function NoMatchesRow({ onClearFilters }: { onClearFilters: () => void }) {
 // The sorted row model falls back to data order for ties, so every sort breaks ties by name.
 const rowsByName = resources.toSorted(compareResourcesByName);
 
-export function ResourcesTable() {
+export function ResourcesTable({ children }: { children: ReactNode }) {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { sorting, columnFilters } = parseResourcesAddress(searchParams);
@@ -234,6 +235,7 @@ export function ResourcesTable() {
         shownCount={rows.length}
         totalCount={rowsByName.length}
         hiddenSelectedCount={selectedIds.size - visibleSelectedCount}
+        actions={children}
       >
         {VALUE_FILTERS.map(({ columnId, title, options }) => {
           const column = table.getColumn(columnId);
